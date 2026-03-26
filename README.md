@@ -23,29 +23,6 @@ If you're experimenting with AI tools, you’ll burn through that in minutes.
 I didn’t have enough money to pay for higher limits.
 So I built something that **doesn’t use the API at all**.
 
----
-
-## What’s different
-
-**figma-mcp-go is just a binary.**
-
-It works through a lightweight **Figma plugin** that connects directly to your open file via a local WebSocket.
-
-No API.
-No rate limits.
-No API key.
-No billing surprises.
-
-Just your AI tool talking straight to Figma.
-
-## How it works
-
-```
-AI tool -> figma-mcp-go -> Figma Plugin
-```
-
-Multiple AI tool instances are supported!
-
 ## Setup
 
 ### 1. Configure your AI tool
@@ -66,8 +43,8 @@ Add to your MCP config:
 ### 2. Install the Figma plugin
 
 1. In Figma Desktop: **Plugins → Development → Import plugin from manifest**
-2. Select `plugin/manifest.json` from this repo (or in the release download)
-3. Run the plugin inside any Figma file — the status badge turns green when connected
+2. Select `manifest.json` in the release download
+3. Run the plugin inside any Figma file
 
 ---
 
