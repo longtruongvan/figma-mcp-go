@@ -99,3 +99,9 @@ So I built something that **doesn’t use the API at all**.
 ## Contributing
 
 Issues and PRs are welcome.
+
+## References
+
+- [magic-spells/figma-mcp-bridge](https://github.com/magic-spells/figma-mcp-bridge)
+- [grab/cursor-talk-to-figma-mcp](https://github.com/grab/cursor-talk-to-figma-mcp)
+- [gethopp/figma-mcp-bridge](https://github.com/gethopp/figma-mcp-bridge)
