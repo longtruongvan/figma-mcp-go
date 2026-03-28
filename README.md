@@ -8,8 +8,8 @@ A free, open-source Figma MCP server that reads Figma files directly via plugin 
 - No Figma API token required
 - No rate limits — free plan friendly
 - Reads live Figma data via plugin bridge
-- Works locally — no cloud calls
 - Written in Go, distributed via npm
+- Supports multiple AI tools simultaneously
 
 ---
 
