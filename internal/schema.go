@@ -77,6 +77,35 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 				return "depth must be a non-negative number"
 			}
 		}
+		if detail, ok := params["detail"].(string); ok && detail != "" {
+			switch detail {
+			case "minimal", "compact", "full":
+			default:
+				return fmt.Sprintf("detail must be minimal, compact, or full, got: %s", detail)
+			}
+		}
+
+	case "search_nodes":
+		query, _ := params["query"].(string)
+		if query == "" {
+			return "query is required"
+		}
+		if nodeID, ok := params["nodeId"].(string); ok && nodeID != "" {
+			if !ValidNodeID(nodeID) {
+				return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeID)
+			}
+		}
+		if limit, ok := params["limit"].(float64); ok && limit <= 0 {
+			return "limit must be a positive number"
+		}
+
+	case "get_reactions":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
 
 	case "scan_text_nodes", "scan_nodes_by_types":
 		nodeID, _ := params["nodeId"].(string)

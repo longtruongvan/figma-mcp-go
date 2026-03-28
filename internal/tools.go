@@ -14,7 +14,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterTools registers all 14 MCP tools on the server.
+// RegisterTools registers all MCP tools on the server.
 // All tools are read-only. No write/create/delete tools are implemented.
 func RegisterTools(s *server.MCPServer, node *Node) {
 	// ── Document & Selection ─────────────────────────────────────────────
@@ -22,6 +22,10 @@ func RegisterTools(s *server.MCPServer, node *Node) {
 	s.AddTool(mcp.NewTool("get_document",
 		mcp.WithDescription("Get the current Figma page document tree"),
 	), makeHandler(node, "get_document", nil, nil))
+
+	s.AddTool(mcp.NewTool("get_pages",
+		mcp.WithDescription("List all pages in the document with their IDs and names. Lightweight alternative to get_document."),
+	), makeHandler(node, "get_pages", nil, nil))
 
 	s.AddTool(mcp.NewTool("get_metadata",
 		mcp.WithDescription("Get metadata about the current Figma document: file name, pages, current page"),
@@ -61,12 +65,50 @@ func RegisterTools(s *server.MCPServer, node *Node) {
 		mcp.WithNumber("depth",
 			mcp.Description("How many levels deep to traverse (default 2)"),
 		),
+		mcp.WithString("detail",
+			mcp.Description("Property verbosity: minimal (id/name/type/bounds only), compact (+fills/strokes/opacity), full (everything, default)"),
+		),
 	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		params := map[string]interface{}{}
 		if d, ok := req.GetArguments()["depth"].(float64); ok && d > 0 {
 			params["depth"] = d
 		}
+		if det, ok := req.GetArguments()["detail"].(string); ok && det != "" {
+			params["detail"] = det
+		}
 		resp, err := node.Send(ctx, "get_design_context", nil, params)
+		return renderResponse(resp, err)
+	})
+
+	s.AddTool(mcp.NewTool("search_nodes",
+		mcp.WithDescription("Search for nodes by name substring and/or type within a subtree. Avoids dumping the entire document tree."),
+		mcp.WithString("query",
+			mcp.Required(),
+			mcp.Description("Name substring to match (case-insensitive)"),
+		),
+		mcp.WithString("nodeId",
+			mcp.Description("Scope search to this subtree (default: current page), colon format e.g. '4029:12345'"),
+		),
+		mcp.WithArray("types",
+			mcp.Description("Filter by Figma node type e.g. ['TEXT', 'FRAME', 'COMPONENT']"),
+		),
+		mcp.WithNumber("limit",
+			mcp.Description("Maximum results to return (default: 50)"),
+		),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		params := map[string]interface{}{
+			"query": req.GetArguments()["query"],
+		}
+		if id, ok := req.GetArguments()["nodeId"].(string); ok && id != "" {
+			params["nodeId"] = id
+		}
+		if raw, ok := req.GetArguments()["types"].([]interface{}); ok && len(raw) > 0 {
+			params["types"] = raw
+		}
+		if limit, ok := req.GetArguments()["limit"].(float64); ok && limit > 0 {
+			params["limit"] = limit
+		}
+		resp, err := node.Send(ctx, "search_nodes", nil, params)
 		return renderResponse(resp, err)
 	})
 
@@ -101,6 +143,26 @@ func RegisterTools(s *server.MCPServer, node *Node) {
 		})
 		return renderResponse(resp, err)
 	})
+
+	s.AddTool(mcp.NewTool("get_reactions",
+		mcp.WithDescription("Get prototype/interaction reactions on a node. Useful for understanding interactive prototypes."),
+		mcp.WithString("nodeId",
+			mcp.Required(),
+			mcp.Description("Node ID in colon format e.g. '4029:12345'"),
+		),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		nodeID, _ := req.GetArguments()["nodeId"].(string)
+		resp, err := node.Send(ctx, "get_reactions", []string{nodeID}, nil)
+		return renderResponse(resp, err)
+	})
+
+	s.AddTool(mcp.NewTool("get_viewport",
+		mcp.WithDescription("Get the current Figma viewport: scroll center, zoom level, and visible bounds."),
+	), makeHandler(node, "get_viewport", nil, nil))
+
+	s.AddTool(mcp.NewTool("get_fonts",
+		mcp.WithDescription("List all fonts used in the current page, sorted by usage frequency. Useful for understanding typography without scanning all text nodes."),
+	), makeHandler(node, "get_fonts", nil, nil))
 
 	// ── Styles & Variables ───────────────────────────────────────────────
 
@@ -187,15 +249,22 @@ func RegisterPrompts(s *server.MCPServer) {
 					mcp.NewTextContent(`To effectively read a Figma design with figma-mcp-go:
 
 1. Start with get_metadata — understand file name, pages, and current page
-2. Use get_design_context (depth=2) for a summary of the current selection or page
-3. Drill into specific nodes with get_node or get_nodes_info (prefer batch over single calls)
-4. For text-heavy components, use scan_text_nodes to collect all copy at once
-5. Use scan_nodes_by_types to find all FRAME/COMPONENT/INSTANCE nodes in a subtree
-6. Call get_styles and get_variable_defs once per session to understand the design system
-7. Call get_screenshot last and only when visual confirmation is needed — it is expensive
-8. Node IDs use colon format: 4029:12345 — never use hyphens
-9. get_design_context is more token-efficient than get_document for large files
-10. get_local_components lists all components — use with get_node to inspect internals`),
+2. Use get_pages to list all pages without loading their full trees
+3. Use get_design_context (depth=2, detail=compact) for a token-efficient summary of the current selection or page
+   - detail=minimal: id/name/type/bounds only (~5% tokens)
+   - detail=compact: + fills/strokes/opacity (~30% tokens)
+   - detail=full: everything, default (100% tokens)
+4. Use search_nodes to find nodes by name or type without dumping the entire tree
+5. Drill into specific nodes with get_node or get_nodes_info (prefer batch over single calls)
+6. For text-heavy components, use scan_text_nodes to collect all copy at once
+7. Use scan_nodes_by_types to find all FRAME/COMPONENT/INSTANCE nodes in a subtree
+8. Call get_styles and get_variable_defs once per session to understand the design system
+9. Call get_fonts to understand typography usage across the page at a glance
+10. Use get_viewport to see what the user is currently looking at in the canvas
+11. Use get_reactions to inspect prototype interactions on a node
+12. Call get_screenshot last and only when visual confirmation is needed — it is expensive
+13. Node IDs use colon format: 4029:12345 — never use hyphens
+14. get_local_components now includes componentSets and variantProperties for variant-aware inspection`),
 				),
 			},
 		), nil
@@ -241,9 +310,9 @@ func toStringSlice(raw []interface{}) []string {
 // ── save_screenshots ─────────────────────────────────────────────────────────
 
 type saveItem struct {
-	NodeID     string `json:"nodeId"`
-	OutputPath string `json:"outputPath"`
-	Format     string `json:"format,omitempty"`
+	NodeID     string  `json:"nodeId"`
+	OutputPath string  `json:"outputPath"`
+	Format     string  `json:"format,omitempty"`
 	Scale      float64 `json:"scale,omitempty"`
 }
 
@@ -409,11 +478,24 @@ func writeBase64(b64, outputPath string) (int, error) {
 }
 
 func resolveOutputPath(outputPath, workDir string) (string, error) {
+	// Reject absolute paths early — filepath.Join on Windows can let a drive-letter
+	// absolute path escape the workDir check via filepath.Rel.
+	if filepath.IsAbs(outputPath) {
+		return "", fmt.Errorf("outputPath must be a relative path, got: %s", outputPath)
+	}
+
 	resolved := filepath.Join(workDir, outputPath)
 	rel, err := filepath.Rel(workDir, resolved)
-	if err != nil || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
+	if err != nil {
 		return "", fmt.Errorf("outputPath must be inside the working directory: %s", workDir)
 	}
+
+	// Convert to forward slashes before prefix check so Windows paths like
+	// "C:\.." don't bypass the ".." detection.
+	if strings.HasPrefix(filepath.ToSlash(rel), "..") {
+		return "", fmt.Errorf("outputPath must be inside the working directory: %s", workDir)
+	}
+
 	return resolved, nil
 }
 

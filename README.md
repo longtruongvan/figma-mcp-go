@@ -84,12 +84,15 @@ Install via `npx` — no build step required. Watch the setup video or follow th
 |------|-------------|
 | `get_document` | Full current page tree |
 | `get_metadata` | File name, pages, current page |
+| `get_pages` | All pages (IDs + names) — lightweight, no tree loading |
 | `get_selection` | Currently selected nodes |
 | `get_node` | Single node by ID |
 | `get_nodes_info` | Multiple nodes by ID |
-| `get_design_context` | Depth-limited tree — token-efficient for large files |
+| `get_design_context` | Depth-limited tree with `detail` level (`minimal`/`compact`/`full`) |
+| `search_nodes` | Find nodes by name substring and/or type within a subtree |
 | `scan_text_nodes` | All text nodes in a subtree |
 | `scan_nodes_by_types` | Nodes matching given type list |
+| `get_viewport` | Current viewport center, zoom, and visible bounds |
 
 ### Styles & Variables
 
@@ -97,8 +100,10 @@ Install via `npx` — no build step required. Watch the setup video or follow th
 |------|-------------|
 | `get_styles` | Paint, text, effect, and grid styles |
 | `get_variable_defs` | Variable collections and values |
-| `get_local_components` | All components in the file |
+| `get_local_components` | All components + component sets with variant properties |
 | `get_annotations` | Dev-mode annotations |
+| `get_fonts` | All fonts used on the current page, sorted by frequency |
+| `get_reactions` | Prototype/interaction reactions on a node |
 
 ### Export
 

@@ -259,31 +259,68 @@ const handleRequest = async (request) => {
           request.params && request.params.depth != null
             ? request.params.depth
             : 2;
-        const serializeWithDepth = async (node, currentDepth) => {
-          const serialized = serializeNode(node);
-          if (currentDepth >= depth && serialized.children) {
-            return Object.assign({}, serialized, {
-              children: undefined,
-              childCount: node.children ? node.children.length : 0,
-            });
-          }
-          if (serialized.children) {
-            const childNodes = await Promise.all(
-              serialized.children.map((child) =>
-                figma.getNodeByIdAsync(child.id),
-              ),
-            );
-            const serializedChildren = await Promise.all(
-              childNodes
-                .filter((n) => n !== null && n.type !== "DOCUMENT")
-                .map((n) => serializeWithDepth(n, currentDepth + 1)),
-            );
-            return Object.assign({}, serialized, {
-              children: serializedChildren,
-            });
-          }
-          return serialized;
+        const detail = (request.params && request.params.detail) || "full";
+
+        // Serialize a single node shallowly at the requested detail level.
+        // "minimal": id/name/type/bounds only (~5% tokens vs full)
+        // "compact": + fills/strokes/opacity/visible (~30%)
+        // "full":    everything — same as serializeNode (100%)
+        const serializeForDetail = (n) => {
+          const base = { id: n.id, name: n.name, type: n.type, bounds: getBounds(n) };
+          if (detail === "minimal") return base;
+          const styles = serializeStyles(n);
+          const result = Object.assign({}, base);
+          if (Object.keys(styles).length > 0) result.styles = styles;
+          if ("opacity" in n && n.opacity !== 1) result.opacity = n.opacity;
+          if ("visible" in n && !n.visible) result.visible = false;
+          if (detail === "compact") return result;
+          // full — delegate to full serializer (handles TEXT props etc.)
+          return serializeNode(n);
         };
+
+        const serializeWithDepth = async (node, currentDepth) => {
+          if (detail === "full") {
+            // Original full-detail path: serializeNode already recurses children
+            // synchronously, then we re-fetch async for depth control.
+            const serialized = serializeNode(node);
+            if (currentDepth >= depth && serialized.children) {
+              return Object.assign({}, serialized, {
+                children: undefined,
+                childCount: node.children ? node.children.length : 0,
+              });
+            }
+            if (serialized.children) {
+              const childNodes = await Promise.all(
+                serialized.children.map((child) =>
+                  figma.getNodeByIdAsync(child.id),
+                ),
+              );
+              const serializedChildren = await Promise.all(
+                childNodes
+                  .filter((n) => n !== null && n.type !== "DOCUMENT")
+                  .map((n) => serializeWithDepth(n, currentDepth + 1)),
+              );
+              return Object.assign({}, serialized, { children: serializedChildren });
+            }
+            return serialized;
+          }
+
+          // minimal / compact — serialize shallowly then recurse directly on
+          // node.children (Figma objects) to avoid redundant serialization.
+          const serialized = serializeForDetail(node);
+          const hasChildren = "children" in node && node.children.length > 0;
+          if (!hasChildren) return serialized;
+          if (currentDepth >= depth) {
+            return Object.assign({}, serialized, { childCount: node.children.length });
+          }
+          const serializedChildren = await Promise.all(
+            node.children
+              .filter((n) => n.type !== "DOCUMENT")
+              .map((n) => serializeWithDepth(n, currentDepth + 1)),
+          );
+          return Object.assign({}, serialized, { children: serializedChildren });
+        };
+
         const selection = figma.currentPage.selection;
         const contextNodes =
           selection.length > 0
@@ -425,18 +462,32 @@ const handleRequest = async (request) => {
       case "get_local_components": {
         const pages = figma.root.children;
         const allComponents = [];
+        const componentSetsMap = new Map();
         for (let i = 0; i < pages.length; i++) {
           const page = pages[i];
           await page.loadAsync();
-          const pageComponents = page.findAllWithCriteria({
-            types: ["COMPONENT"],
+          const pageNodes = page.findAllWithCriteria({
+            types: ["COMPONENT", "COMPONENT_SET"],
           });
-          for (const component of pageComponents) {
-            allComponents.push({
-              id: component.id,
-              name: component.name,
-              key: "key" in component ? component.key : null,
-            });
+          for (const n of pageNodes) {
+            if (n.type === "COMPONENT_SET") {
+              componentSetsMap.set(n.id, {
+                id: n.id,
+                name: n.name,
+                key: "key" in n ? n.key : null,
+              });
+            } else {
+              const parentIsSet =
+                n.parent && n.parent.type === "COMPONENT_SET";
+              allComponents.push({
+                id: n.id,
+                name: n.name,
+                key: "key" in n ? n.key : null,
+                componentSetId: parentIsSet ? n.parent.id : null,
+                variantProperties:
+                  "variantProperties" in n ? n.variantProperties : null,
+              });
+            }
           }
           figma.ui.postMessage({
             type: "progress_update",
@@ -449,7 +500,115 @@ const handleRequest = async (request) => {
         return {
           type: request.type,
           requestId: request.requestId,
-          data: { count: allComponents.length, components: allComponents },
+          data: {
+            count: allComponents.length,
+            components: allComponents,
+            componentSets: Array.from(componentSetsMap.values()),
+          },
+        };
+      }
+
+      case "get_pages":
+        return {
+          type: request.type,
+          requestId: request.requestId,
+          data: {
+            currentPageId: figma.currentPage.id,
+            pages: figma.root.children.map((page) => ({
+              id: page.id,
+              name: page.name,
+            })),
+          },
+        };
+
+      case "get_viewport":
+        return {
+          type: request.type,
+          requestId: request.requestId,
+          data: {
+            center: { x: figma.viewport.center.x, y: figma.viewport.center.y },
+            zoom: figma.viewport.zoom,
+            bounds: {
+              x: figma.viewport.bounds.x,
+              y: figma.viewport.bounds.y,
+              width: figma.viewport.bounds.width,
+              height: figma.viewport.bounds.height,
+            },
+          },
+        };
+
+      case "get_fonts": {
+        const fontMap = new Map();
+        const collectFonts = (n) => {
+          if (n.type === "TEXT") {
+            const fontName = n.fontName;
+            if (typeof fontName !== "symbol" && fontName) {
+              const key = `${fontName.family}::${fontName.style}`;
+              if (!fontMap.has(key)) {
+                fontMap.set(key, { family: fontName.family, style: fontName.style, nodeCount: 0 });
+              }
+              fontMap.get(key).nodeCount++;
+            }
+          }
+          if ("children" in n) n.children.forEach(collectFonts);
+        };
+        collectFonts(figma.currentPage);
+        const fonts = Array.from(fontMap.values()).sort((a, b) => b.nodeCount - a.nodeCount);
+        return {
+          type: request.type,
+          requestId: request.requestId,
+          data: { count: fonts.length, fonts },
+        };
+      }
+
+      case "search_nodes": {
+        const query = request.params && request.params.query
+          ? request.params.query.toLowerCase()
+          : "";
+        const scopeNodeId = request.params && request.params.nodeId;
+        const types = request.params && request.params.types ? request.params.types : [];
+        const limit = request.params && request.params.limit ? request.params.limit : 50;
+        const root = scopeNodeId
+          ? await figma.getNodeByIdAsync(scopeNodeId)
+          : figma.currentPage;
+        if (!root) throw new Error(`Node not found: ${scopeNodeId}`);
+        const results = [];
+        const search = async (n) => {
+          if (results.length >= limit) return;
+          if (n !== root) {
+            const nameMatch = !query || n.name.toLowerCase().includes(query);
+            const typeMatch = types.length === 0 || types.includes(n.type);
+            if (nameMatch && typeMatch) {
+              results.push({
+                id: n.id,
+                name: n.name,
+                type: n.type,
+                bounds: getBounds(n),
+              });
+            }
+          }
+          if (results.length < limit && "children" in n) {
+            for (const child of n.children) await search(child);
+          }
+        };
+        await search(root);
+        return {
+          type: request.type,
+          requestId: request.requestId,
+          data: { count: results.length, nodes: results },
+        };
+      }
+
+      case "get_reactions": {
+        const nodeId = request.nodeIds && request.nodeIds[0];
+        if (!nodeId) throw new Error("nodeId is required for get_reactions");
+        const node = await figma.getNodeByIdAsync(nodeId);
+        if (!node || node.type === "DOCUMENT") throw new Error(`Node not found: ${nodeId}`);
+        const reactions = "reactions" in node ? node.reactions : [];
+        return {
+          type: request.type,
+          requestId: request.requestId,
+          data: { nodeId: node.id, name: node.name, reactions },
         };
       }
 
