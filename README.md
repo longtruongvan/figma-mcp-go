@@ -1,8 +1,8 @@
 # figma-mcp-go
 
-Figma MCP for Free Users, No Rate Limits, allowing Text to Designs, and Designs to Code.
+Figma MCP — Free, No Rate Limits
 
-A free, open-source Figma MCP server that reads and writes Figma files directly via plugin — no REST API, no rate limits. Works with Cursor, Claude, GitHub Copilot, and any MCP-compatible AI tool.
+Open-source Figma MCP server with full read/write access via plugin — no REST API, no rate limits. Turn text into designs and designs into real code. Works with Cursor, Claude, GitHub Copilot, and any MCP-compatible AI tool.
 
 **Highlights**
 - No Figma API token required
