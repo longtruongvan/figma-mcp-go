@@ -7,9 +7,9 @@ A free, open-source Figma MCP server that reads Figma files directly via plugin 
 **Highlights**
 - No Figma API token required
 - No rate limits — free plan friendly
-- Reads live Figma data via plugin bridge
-- Written in Go, distributed via npm
+- **Read and Write** live Figma data via plugin bridge
 - Supports multiple AI tools simultaneously
+- Written in Go, distributed via npm
 
 ---
 
@@ -40,7 +40,7 @@ Install via `npx` — no build step required. Watch the setup video or follow th
 
 ### 1. Configure your AI tool
 
-** Claude Code CLI
+**Claude Code CLI**
 ```bash
 claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 ```
@@ -83,6 +83,34 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 
 ## Available Tools
 
+### Write — Create
+
+| Tool | Description |
+|------|-------------|
+| `create_frame` | Create a frame with optional auto-layout, fill, and parent |
+| `create_rectangle` | Create a rectangle with optional fill and corner radius |
+| `create_ellipse` | Create an ellipse or circle |
+| `create_text` | Create a text node (font loaded automatically) |
+| `import_image` | Decode base64 image and place it as a rectangle fill |
+
+### Write — Modify
+
+| Tool | Description |
+|------|-------------|
+| `set_text` | Update text content of an existing TEXT node |
+| `set_fills` | Set solid fill color (hex) on a node |
+| `set_strokes` | Set solid stroke color and weight on a node |
+| `move_nodes` | Move nodes to an absolute x/y position |
+| `resize_nodes` | Resize nodes by width and/or height |
+| `rename_node` | Rename a node |
+| `clone_node` | Clone a node, optionally repositioning or reparenting |
+
+### Write — Delete
+
+| Tool | Description |
+|------|-------------|
+| `delete_nodes` | Delete one or more nodes permanently |
+
 ### Document & Selection
 
 | Tool | Description |
@@ -116,6 +144,17 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 |------|-------------|
 | `get_screenshot` | Base64 image export of any node |
 | `save_screenshots` | Export images to disk (server-side, no API call) |
+
+### MCP Prompts
+
+| Prompt | Description |
+|--------|-------------|
+| `read_design_strategy` | Best practices for reading Figma designs |
+| `design_strategy` | Best practices for creating and modifying designs |
+| `text_replacement_strategy` | Chunked approach for replacing text across a design |
+| `annotation_conversion_strategy` | Convert manual annotations to native Figma annotations |
+| `swap_overrides_instances` | Transfer overrides between component instances |
+| `reaction_to_connector_strategy` | Map prototype reactions into interaction flow diagrams |
 
 ---
 
