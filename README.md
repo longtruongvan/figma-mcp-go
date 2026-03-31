@@ -40,7 +40,19 @@ Install via `npx` — no build step required. Watch the setup video or follow th
 
 [![Watch the video](https://img.youtube.com/vi/DjqyU0GKv9k/sddefault.jpg)](https://youtu.be/DjqyU0GKv9k)
 
+### Prerequisites
+
+- Figma Desktop
+- Node.js 18+ and `npm`/`npx`
+- An MCP-compatible AI client such as Codex, Claude Code, Cursor, VS Code, or GitHub Copilot
+- For local plugin development from this repo: `npm install` support in the `plugin/` directory
+
 ### 1. Configure your AI tool
+
+**Codex CLI**
+```bash
+codex mcp add figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
+```
 
 **Claude Code CLI**
 ```bash
@@ -53,7 +65,7 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
   "mcpServers": {
     "figma-mcp-go": {
       "command": "npx",
-      "args": ["-y", "@vkhanhqui/figma-mcp-go"]
+      "args": ["-y", "@vkhanhqui/figma-mcp-go@latest"]
     }
   }
 }
@@ -68,7 +80,7 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
       "command": "npx",
       "args": [
         "-y",
-        "@vkhanhqui/figma-mcp-go"
+        "@vkhanhqui/figma-mcp-go@latest"
       ]
     }
   }
@@ -77,9 +89,77 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 
 ### 2. Install the Figma plugin
 
+You have two options:
+
+**Option A — use the release plugin (fastest)**
 1. In Figma Desktop: **Plugins → Development → Import plugin from manifest**
 2. Select `manifest.json` from the [plugin.zip](https://github.com/vkhanhqui/figma-mcp-go/releases)
 3. Run the plugin inside any Figma file
+
+**Option B — build the plugin locally from this repo**
+```bash
+cd plugin
+npm install
+npm run build
+```
+
+Then:
+1. In Figma Desktop: **Plugins → Development → Import plugin from manifest**
+2. Select [`plugin/manifest.json`](plugin/manifest.json)
+3. Run the plugin inside any Figma file
+
+The local manifest points to:
+- `plugin/dist/code.js`
+- `plugin/dist/index.html`
+
+### 3. Start your AI client and verify the connection
+
+1. Restart or reopen your AI client after adding the MCP server.
+2. Open any Figma file in Figma Desktop.
+3. Run the `Figma MCP Go` plugin.
+4. Wait for the badge to change from `Disconnected` to `Connected`.
+5. Test with a simple MCP call such as:
+
+```text
+get_metadata
+```
+
+If the bridge is working, you should get back the current file name, page name, and page IDs.
+
+### 4. Quick local smoke test
+
+If you want to verify the server outside your AI client, run:
+
+```bash
+npx -y @vkhanhqui/figma-mcp-go@latest
+```
+
+Then open the Figma plugin. It should connect to `ws://localhost:1994/ws`.
+
+This is especially useful after:
+- moving to a new machine
+- reinstalling macOS
+- resetting your AI client config
+- debugging a `Disconnected` plugin state
+
+### Troubleshooting
+
+**Plugin stays `Disconnected`**
+
+- Make sure your AI client has actually started the MCP server. Adding config alone is not enough.
+- Restart the AI client or open a new session after `mcp add`.
+- For a manual check, run `npx -y @vkhanhqui/figma-mcp-go@latest` in a terminal, then reopen the plugin.
+- Confirm nothing is blocking local port `1994`.
+
+**Using the local repo plugin**
+
+- Run `cd plugin && npm install && npm run build` before importing the manifest.
+- Rebuild after changing files in `plugin/src/`.
+
+**Codex-specific note**
+
+- After `codex mcp add ...`, existing threads may not immediately pick up the new MCP server.
+- If Codex does not see the server yet, open a new thread or restart the app/CLI session.
 
 ---
 
