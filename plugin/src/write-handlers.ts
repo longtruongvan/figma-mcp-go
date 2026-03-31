@@ -5,9 +5,11 @@
 import { getBounds } from "./serializers";
 import {
   makeSolidPaint,
+  makePaint,
   getParentNode,
   base64ToBytes,
   applyTextBoxProperties,
+  applyCornerRadius,
   loadAllFonts,
   parseLetterSpacing,
   parseLineHeight,
@@ -53,7 +55,7 @@ export const handleWriteRequest = async (request: any) => {
       rect.y = p.y != null ? p.y : 0;
       if (p.name) rect.name = p.name;
       if (p.fillColor) rect.fills = [makeSolidPaint(p.fillColor)];
-      if (p.cornerRadius != null) rect.cornerRadius = p.cornerRadius;
+      if (p.cornerRadius != null) applyCornerRadius(rect, { cornerRadius: p.cornerRadius });
       (parent as any).appendChild(rect);
       figma.commitUndo();
       return {
@@ -136,12 +138,34 @@ export const handleWriteRequest = async (request: any) => {
       const node = await figma.getNodeByIdAsync(nodeId);
       if (!node) throw new Error(`Node not found: ${nodeId}`);
       if (!("fills" in node)) throw new Error(`Node ${nodeId} does not support fills`);
-      (node as any).fills = [makeSolidPaint(p.color, p.opacity != null ? p.opacity : undefined)];
+      if (Array.isArray(p.fills)) {
+        (node as any).fills = p.fills.map(makePaint);
+      } else {
+        (node as any).fills = [makeSolidPaint(p.color, p.opacity != null ? p.opacity : undefined)];
+      }
       figma.commitUndo();
       return {
         type: request.type,
         requestId: request.requestId,
         data: { id: node.id, name: node.name },
+      };
+    }
+
+    case "set_corner_radius": {
+      const p = request.params || {};
+      const nodeId = request.nodeIds && request.nodeIds[0];
+      if (!nodeId) throw new Error("nodeId is required");
+      const node = await figma.getNodeByIdAsync(nodeId);
+      if (!node) throw new Error(`Node not found: ${nodeId}`);
+
+      const applied: any = {};
+      applyCornerRadius(node as any, p, applied);
+
+      figma.commitUndo();
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: { id: node.id, name: node.name, applied },
       };
     }
 

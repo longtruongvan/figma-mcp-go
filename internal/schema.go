@@ -149,6 +149,9 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		if h, ok := params["height"].(float64); ok && h <= 0 {
 			return "height must be positive"
 		}
+		if v, ok := params["cornerRadius"].(float64); ok && v < 0 {
+			return "cornerRadius must be non-negative"
+		}
 		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
 			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
 		}
@@ -214,8 +217,8 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		if !ValidNodeID(nodeIDs[0]) {
 			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
 		}
-		if color, _ := params["color"].(string); color == "" {
-			return "color is required (hex string e.g. #FF5733)"
+		if err := validateFills(params); err != "" {
+			return err
 		}
 
 	case "set_strokes":
@@ -227,6 +230,22 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		}
 		if color, _ := params["color"].(string); color == "" {
 			return "color is required (hex string e.g. #FF5733)"
+		}
+
+	case "set_corner_radius":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if !hasAnyParam(params, "cornerRadius", "topLeftRadius", "topRightRadius", "bottomRightRadius", "bottomLeftRadius") {
+			return "at least one corner radius property is required"
+		}
+		for _, key := range []string{"cornerRadius", "topLeftRadius", "topRightRadius", "bottomRightRadius", "bottomLeftRadius"} {
+			if v, ok := params[key].(float64); ok && v < 0 {
+				return fmt.Sprintf("%s must be non-negative", key)
+			}
 		}
 
 	case "move_nodes":
@@ -610,4 +629,77 @@ func validateTextAutoResize(raw interface{}) string {
 	default:
 		return fmt.Sprintf("textAutoResize must be NONE, WIDTH_AND_HEIGHT, HEIGHT, or TRUNCATE, got: %s", value)
 	}
+}
+
+func validateFills(params map[string]interface{}) string {
+	rawFills, hasFills := params["fills"]
+	if !hasFills {
+		color, _ := params["color"].(string)
+		if color == "" {
+			return "either fills or color is required"
+		}
+		if opacity, ok := params["opacity"].(float64); ok && (opacity < 0 || opacity > 1) {
+			return "opacity must be between 0 and 1"
+		}
+		return ""
+	}
+
+	fills, ok := rawFills.([]interface{})
+	if !ok {
+		return "fills must be an array"
+	}
+
+	for i, raw := range fills {
+		fill, ok := raw.(map[string]interface{})
+		if !ok {
+			return fmt.Sprintf("fills[%d] must be an object", i)
+		}
+
+		if opacity, ok := fill["opacity"].(float64); ok && (opacity < 0 || opacity > 1) {
+			return fmt.Sprintf("fills[%d].opacity must be between 0 and 1", i)
+		}
+
+		t, _ := fill["type"].(string)
+		switch t {
+		case "SOLID":
+			if color, _ := fill["color"].(string); color == "" {
+				return fmt.Sprintf("fills[%d].color is required for SOLID fills", i)
+			}
+		case "GRADIENT_LINEAR", "GRADIENT_RADIAL", "GRADIENT_ANGULAR", "GRADIENT_DIAMOND":
+			rawStops, ok := fill["stops"]
+			if !ok {
+				return fmt.Sprintf("fills[%d].stops is required for %s", i, t)
+			}
+			stops, ok := rawStops.([]interface{})
+			if !ok {
+				return fmt.Sprintf("fills[%d].stops must be an array", i)
+			}
+			if len(stops) < 2 {
+				return fmt.Sprintf("fills[%d].stops must contain at least 2 stops", i)
+			}
+			for j, rawStop := range stops {
+				stop, ok := rawStop.(map[string]interface{})
+				if !ok {
+					return fmt.Sprintf("fills[%d].stops[%d] must be an object", i, j)
+				}
+				if color, _ := stop["color"].(string); color == "" {
+					return fmt.Sprintf("fills[%d].stops[%d].color is required", i, j)
+				}
+				position, ok := stop["position"].(float64)
+				if !ok {
+					return fmt.Sprintf("fills[%d].stops[%d].position is required", i, j)
+				}
+				if position < 0 || position > 1 {
+					return fmt.Sprintf("fills[%d].stops[%d].position must be between 0 and 1", i, j)
+				}
+				if opacity, ok := stop["opacity"].(float64); ok && (opacity < 0 || opacity > 1) {
+					return fmt.Sprintf("fills[%d].stops[%d].opacity must be between 0 and 1", i, j)
+				}
+			}
+		default:
+			return fmt.Sprintf("fills[%d].type is invalid: %s", i, t)
+		}
+	}
+
+	return ""
 }

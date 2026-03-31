@@ -689,6 +689,72 @@ var __async = (__this, __arguments, generator) => {
     const { r, g, b, a } = typeof colorInput === "string" ? hexToRgb(colorInput) : { r: colorInput.r, g: colorInput.g, b: colorInput.b, a: colorInput.a != null ? colorInput.a : 1 };
     return { r, g, b, a: opacityOverride != null ? opacityOverride : a };
   };
+  const degreesToRadians = (degrees) => degrees * Math.PI / 180;
+  const gradientHandlesToTransform = (handles) => {
+    const [handle0, handle1, handle2] = handles;
+    return [
+      [
+        handle1.x - handle0.x,
+        2 * (handle2.x - handle0.x),
+        2 * handle0.x - handle2.x
+      ],
+      [
+        handle1.y - handle0.y,
+        2 * (handle2.y - handle0.y),
+        2 * handle0.y - handle2.y
+      ]
+    ];
+  };
+  const makeGradientTransform = (angle = 0) => {
+    const radians = degreesToRadians(angle);
+    const direction = { x: Math.cos(radians), y: Math.sin(radians) };
+    const perpendicular = { x: -Math.sin(radians), y: Math.cos(radians) };
+    const start = {
+      x: 0.5 - direction.x * 0.5,
+      y: 0.5 - direction.y * 0.5
+    };
+    const end = {
+      x: 0.5 + direction.x * 0.5,
+      y: 0.5 + direction.y * 0.5
+    };
+    const widthHandle = {
+      x: start.x + perpendicular.x * 0.5,
+      y: start.y + perpendicular.y * 0.5
+    };
+    return gradientHandlesToTransform([start, end, widthHandle]);
+  };
+  const makeGradientStops = (stops) => {
+    return stops.map((stop) => ({
+      position: stop.position,
+      color: makeRGBA(stop.color, stop.opacity)
+    }));
+  };
+  const makePaint = (fill) => {
+    switch (fill.type) {
+      case "SOLID": {
+        const paint = makeSolidPaint(fill.color, fill.opacity);
+        if (fill.visible != null) paint.visible = fill.visible;
+        if (fill.blendMode) paint.blendMode = fill.blendMode;
+        return paint;
+      }
+      case "GRADIENT_LINEAR":
+      case "GRADIENT_RADIAL":
+      case "GRADIENT_ANGULAR":
+      case "GRADIENT_DIAMOND": {
+        const paint = {
+          type: fill.type,
+          gradientTransform: makeGradientTransform(fill.angle != null ? fill.angle : 0),
+          gradientStops: makeGradientStops(fill.stops || [])
+        };
+        if (fill.visible != null) paint.visible = fill.visible;
+        if (fill.opacity != null) paint.opacity = fill.opacity;
+        if (fill.blendMode) paint.blendMode = fill.blendMode;
+        return paint;
+      }
+      default:
+        throw new Error(`Unsupported fill type: ${fill.type}`);
+    }
+  };
   const loadAllFonts = (node) => __async(null, null, function* () {
     if (node.hasMissingFont) {
       throw new Error(`Text node ${node.id} has missing fonts`);
@@ -734,6 +800,26 @@ var __async = (__this, __arguments, generator) => {
     node.resize(nextWidth, nextHeight);
     if (applied && hasWidth) applied.width = nextWidth;
     if (applied && hasHeight) applied.height = nextHeight;
+  };
+  const applyCornerRadius = (node, value, applied) => {
+    const perCornerKeys = ["topLeftRadius", "topRightRadius", "bottomRightRadius", "bottomLeftRadius"];
+    const hasPerCorner = perCornerKeys.some((key) => value[key] != null);
+    if (value.cornerRadius != null) {
+      if (!("cornerRadius" in node)) {
+        throw new Error(`Node ${node.id} does not support cornerRadius`);
+      }
+      node.cornerRadius = value.cornerRadius;
+      if (applied) applied.cornerRadius = value.cornerRadius;
+    }
+    if (!hasPerCorner) return;
+    for (const key of perCornerKeys) {
+      if (value[key] == null) continue;
+      if (!(key in node)) {
+        throw new Error(`Node ${node.id} does not support ${key}`);
+      }
+      node[key] = value[key];
+      if (applied) applied[key] = value[key];
+    }
   };
   const makeEffect = (effect) => {
     switch (effect.type) {
@@ -865,7 +951,7 @@ var __async = (__this, __arguments, generator) => {
         rect.y = p.y != null ? p.y : 0;
         if (p.name) rect.name = p.name;
         if (p.fillColor) rect.fills = [makeSolidPaint(p.fillColor)];
-        if (p.cornerRadius != null) rect.cornerRadius = p.cornerRadius;
+        if (p.cornerRadius != null) applyCornerRadius(rect, { cornerRadius: p.cornerRadius });
         parent.appendChild(rect);
         figma.commitUndo();
         return {
@@ -944,12 +1030,31 @@ var __async = (__this, __arguments, generator) => {
         const node = yield figma.getNodeByIdAsync(nodeId);
         if (!node) throw new Error(`Node not found: ${nodeId}`);
         if (!("fills" in node)) throw new Error(`Node ${nodeId} does not support fills`);
-        node.fills = [makeSolidPaint(p.color, p.opacity != null ? p.opacity : void 0)];
+        if (Array.isArray(p.fills)) {
+          node.fills = p.fills.map(makePaint);
+        } else {
+          node.fills = [makeSolidPaint(p.color, p.opacity != null ? p.opacity : void 0)];
+        }
         figma.commitUndo();
         return {
           type: request.type,
           requestId: request.requestId,
           data: { id: node.id, name: node.name }
+        };
+      }
+      case "set_corner_radius": {
+        const p = request.params || {};
+        const nodeId = request.nodeIds && request.nodeIds[0];
+        if (!nodeId) throw new Error("nodeId is required");
+        const node = yield figma.getNodeByIdAsync(nodeId);
+        if (!node) throw new Error(`Node not found: ${nodeId}`);
+        const applied = {};
+        applyCornerRadius(node, p, applied);
+        figma.commitUndo();
+        return {
+          type: request.type,
+          requestId: request.requestId,
+          data: { id: node.id, name: node.name, applied }
         };
       }
       case "set_strokes": {

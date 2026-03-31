@@ -57,6 +57,79 @@ export const makeRGBA = (colorInput: any, opacityOverride?: number): RGBA => {
   return { r, g, b, a: opacityOverride != null ? opacityOverride : a };
 };
 
+const degreesToRadians = (degrees: number) => (degrees * Math.PI) / 180;
+
+const gradientHandlesToTransform = (handles: [Vector, Vector, Vector]): Transform => {
+  const [handle0, handle1, handle2] = handles;
+  return [
+    [
+      handle1.x - handle0.x,
+      2 * (handle2.x - handle0.x),
+      2 * handle0.x - handle2.x,
+    ],
+    [
+      handle1.y - handle0.y,
+      2 * (handle2.y - handle0.y),
+      2 * handle0.y - handle2.y,
+    ],
+  ];
+};
+
+const makeGradientTransform = (angle = 0): Transform => {
+  const radians = degreesToRadians(angle);
+  const direction = { x: Math.cos(radians), y: Math.sin(radians) };
+  const perpendicular = { x: -Math.sin(radians), y: Math.cos(radians) };
+
+  const start = {
+    x: 0.5 - direction.x * 0.5,
+    y: 0.5 - direction.y * 0.5,
+  };
+  const end = {
+    x: 0.5 + direction.x * 0.5,
+    y: 0.5 + direction.y * 0.5,
+  };
+  const widthHandle = {
+    x: start.x + perpendicular.x * 0.5,
+    y: start.y + perpendicular.y * 0.5,
+  };
+
+  return gradientHandlesToTransform([start, end, widthHandle]);
+};
+
+const makeGradientStops = (stops: any[]): ColorStop[] => {
+  return stops.map((stop) => ({
+    position: stop.position,
+    color: makeRGBA(stop.color, stop.opacity),
+  }));
+};
+
+export const makePaint = (fill: any): Paint => {
+  switch (fill.type) {
+    case "SOLID": {
+      const paint = makeSolidPaint(fill.color, fill.opacity) as any;
+      if (fill.visible != null) paint.visible = fill.visible;
+      if (fill.blendMode) paint.blendMode = fill.blendMode;
+      return paint as SolidPaint;
+    }
+    case "GRADIENT_LINEAR":
+    case "GRADIENT_RADIAL":
+    case "GRADIENT_ANGULAR":
+    case "GRADIENT_DIAMOND": {
+      const paint: any = {
+        type: fill.type,
+        gradientTransform: makeGradientTransform(fill.angle != null ? fill.angle : 0),
+        gradientStops: makeGradientStops(fill.stops || []),
+      };
+      if (fill.visible != null) paint.visible = fill.visible;
+      if (fill.opacity != null) paint.opacity = fill.opacity;
+      if (fill.blendMode) paint.blendMode = fill.blendMode;
+      return paint as GradientPaint;
+    }
+    default:
+      throw new Error(`Unsupported fill type: ${fill.type}`);
+  }
+};
+
 export const loadAllFonts = async (node: TextNode) => {
   if (node.hasMissingFont) {
     throw new Error(`Text node ${node.id} has missing fonts`);
@@ -116,6 +189,40 @@ export const applyTextBoxProperties = (
 
   if (applied && hasWidth) applied.width = nextWidth;
   if (applied && hasHeight) applied.height = nextHeight;
+};
+
+export const applyCornerRadius = (
+  node: any,
+  value: {
+    cornerRadius?: number;
+    topLeftRadius?: number;
+    topRightRadius?: number;
+    bottomRightRadius?: number;
+    bottomLeftRadius?: number;
+  },
+  applied?: Record<string, any>,
+) => {
+  const perCornerKeys = ["topLeftRadius", "topRightRadius", "bottomRightRadius", "bottomLeftRadius"] as const;
+  const hasPerCorner = perCornerKeys.some((key) => value[key] != null);
+
+  if (value.cornerRadius != null) {
+    if (!("cornerRadius" in node)) {
+      throw new Error(`Node ${node.id} does not support cornerRadius`);
+    }
+    node.cornerRadius = value.cornerRadius;
+    if (applied) applied.cornerRadius = value.cornerRadius;
+  }
+
+  if (!hasPerCorner) return;
+
+  for (const key of perCornerKeys) {
+    if (value[key] == null) continue;
+    if (!(key in node)) {
+      throw new Error(`Node ${node.id} does not support ${key}`);
+    }
+    node[key] = value[key];
+    if (applied) applied[key] = value[key];
+  }
 };
 
 export const makeEffect = (effect: any): Effect => {

@@ -91,14 +91,14 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 		mcp.WithObject("lineHeight",
 			mcp.Description("Line height object: {unit: AUTO} or {unit: PIXELS|PERCENT|FONT_SIZE_%, value: number}"),
 			mcp.Properties(map[string]interface{}{
-				"unit": map[string]interface{}{"type": "string"},
+				"unit":  map[string]interface{}{"type": "string"},
 				"value": map[string]interface{}{"type": "number"},
 			}),
 		),
 		mcp.WithObject("letterSpacing",
 			mcp.Description("Letter spacing object: {unit: PIXELS|PERCENT, value: number}"),
 			mcp.Properties(map[string]interface{}{
-				"unit": map[string]interface{}{"type": "string"},
+				"unit":  map[string]interface{}{"type": "string"},
 				"value": map[string]interface{}{"type": "number"},
 			}),
 		),
@@ -194,20 +194,48 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 	})
 
 	s.AddTool(mcp.NewTool("set_fills",
-		mcp.WithDescription("Set the fill color of a node."),
+		mcp.WithDescription("Replace a node's fills with either a legacy solid color or an advanced fills array. Pass fills: [] to clear fills."),
 		mcp.WithString("nodeId",
 			mcp.Required(),
 			mcp.Description("Node ID in colon format e.g. '4029:12345'"),
 		),
 		mcp.WithString("color",
-			mcp.Required(),
-			mcp.Description("Fill color as hex e.g. #FF5733"),
+			mcp.Description("Legacy solid fill color as hex e.g. #FF5733. Ignored when fills is provided."),
 		),
 		mcp.WithNumber("opacity", mcp.Description("Fill opacity 0–1 (default 1)")),
+		mcp.WithArray("fills",
+			mcp.Description("Optional advanced paint list. Supported types: SOLID, GRADIENT_LINEAR, GRADIENT_RADIAL, GRADIENT_ANGULAR, GRADIENT_DIAMOND."),
+			mcp.Items(map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"type":      map[string]interface{}{"type": "string"},
+					"color":     map[string]interface{}{"type": "string"},
+					"opacity":   map[string]interface{}{"type": "number"},
+					"visible":   map[string]interface{}{"type": "boolean"},
+					"blendMode": map[string]interface{}{"type": "string"},
+					"angle":     map[string]interface{}{"type": "number"},
+					"stops": map[string]interface{}{
+						"type": "array",
+						"items": map[string]interface{}{
+							"type": "object",
+							"properties": map[string]interface{}{
+								"position": map[string]interface{}{"type": "number"},
+								"color":    map[string]interface{}{"type": "string"},
+								"opacity":  map[string]interface{}{"type": "number"},
+							},
+						},
+					},
+				},
+			}),
+		),
 	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		nodeID, _ := req.GetArguments()["nodeId"].(string)
-		params := map[string]interface{}{
-			"color": req.GetArguments()["color"],
+		params := map[string]interface{}{}
+		if fills, ok := req.GetArguments()["fills"].([]interface{}); ok {
+			params["fills"] = fills
+		}
+		if color, ok := req.GetArguments()["color"].(string); ok && color != "" {
+			params["color"] = color
 		}
 		if op, ok := req.GetArguments()["opacity"].(float64); ok {
 			params["opacity"] = op
@@ -236,6 +264,32 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 			params["strokeWeight"] = sw
 		}
 		resp, err := node.Send(ctx, "set_strokes", []string{nodeID}, params)
+		return renderResponse(resp, err)
+	})
+
+	s.AddTool(mcp.NewTool("set_corner_radius",
+		mcp.WithDescription("Update uniform or per-corner radius on a node that supports rounded corners."),
+		mcp.WithString("nodeId",
+			mcp.Required(),
+			mcp.Description("Node ID in colon format e.g. '4029:12345'"),
+		),
+		mcp.WithNumber("cornerRadius", mcp.Description("Uniform corner radius in pixels")),
+		mcp.WithNumber("topLeftRadius", mcp.Description("Top-left corner radius in pixels")),
+		mcp.WithNumber("topRightRadius", mcp.Description("Top-right corner radius in pixels")),
+		mcp.WithNumber("bottomRightRadius", mcp.Description("Bottom-right corner radius in pixels")),
+		mcp.WithNumber("bottomLeftRadius", mcp.Description("Bottom-left corner radius in pixels")),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		nodeID, _ := req.GetArguments()["nodeId"].(string)
+		params := map[string]interface{}{}
+		for _, key := range []string{
+			"cornerRadius",
+			"topLeftRadius", "topRightRadius", "bottomRightRadius", "bottomLeftRadius",
+		} {
+			if v, ok := req.GetArguments()[key].(float64); ok {
+				params[key] = v
+			}
+		}
+		resp, err := node.Send(ctx, "set_corner_radius", []string{nodeID}, params)
 		return renderResponse(resp, err)
 	})
 
@@ -356,14 +410,14 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 		mcp.WithObject("lineHeight",
 			mcp.Description("Line height object: {unit: AUTO} or {unit: PIXELS|PERCENT|FONT_SIZE_%, value: number}"),
 			mcp.Properties(map[string]interface{}{
-				"unit": map[string]interface{}{"type": "string"},
+				"unit":  map[string]interface{}{"type": "string"},
 				"value": map[string]interface{}{"type": "number"},
 			}),
 		),
 		mcp.WithObject("letterSpacing",
 			mcp.Description("Letter spacing object: {unit: PIXELS|PERCENT, value: number}"),
 			mcp.Properties(map[string]interface{}{
-				"unit": map[string]interface{}{"type": "string"},
+				"unit":  map[string]interface{}{"type": "string"},
 				"value": map[string]interface{}{"type": "number"},
 			}),
 		),
@@ -402,14 +456,14 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 			mcp.Items(map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"type": map[string]interface{}{"type": "string"},
-					"color": map[string]interface{}{"type": "string"},
-					"x": map[string]interface{}{"type": "number"},
-					"y": map[string]interface{}{"type": "number"},
-					"radius": map[string]interface{}{"type": "number"},
-					"spread": map[string]interface{}{"type": "number"},
-					"blendMode": map[string]interface{}{"type": "string"},
-					"visible": map[string]interface{}{"type": "boolean"},
+					"type":                 map[string]interface{}{"type": "string"},
+					"color":                map[string]interface{}{"type": "string"},
+					"x":                    map[string]interface{}{"type": "number"},
+					"y":                    map[string]interface{}{"type": "number"},
+					"radius":               map[string]interface{}{"type": "number"},
+					"spread":               map[string]interface{}{"type": "number"},
+					"blendMode":            map[string]interface{}{"type": "string"},
+					"visible":              map[string]interface{}{"type": "boolean"},
 					"showShadowBehindNode": map[string]interface{}{"type": "boolean"},
 				},
 			}),
@@ -505,7 +559,7 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 	})
 
 	s.AddTool(mcp.NewTool("resize_nodes",
-		mcp.WithDescription("Resize one or more nodes. Provide width, height, or both."),
+		mcp.WithDescription("Resize one or more non-TEXT nodes. Provide width, height, or both."),
 		mcp.WithArray("nodeIds",
 			mcp.Required(),
 			mcp.Description("Node IDs in colon format e.g. ['4029:12345']"),

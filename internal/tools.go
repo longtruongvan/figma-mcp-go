@@ -94,14 +94,15 @@ func RegisterPrompts(s *server.MCPServer) {
    - Use create_text() for labels, buttons text, and links
    - When creating multi-line or wrapped text, set width and textAutoResize intentionally
    - Set appropriate colors and styles:
-     * Use fillColor for backgrounds
+     * Use fillColor for quick solid backgrounds during creation
      * Use set_strokes() for borders
      * Set proper fontStyle for different text elements
      * Use set_effects() only when subtle depth or blur improves hierarchy
 
 6. Modifying existing elements:
    - Use set_text() to modify text content of a TEXT node
-   - Use set_fills() to change background/fill colors
+   - Use set_fills() to change background/fill colors, gradients, or clear fills
+   - Use set_corner_radius() to polish cards, buttons, chips, and image masks
    - Use move_nodes() / resize_nodes() for position and size adjustments on non-TEXT nodes
    - Use set_text_style() for TEXT sizing, line height, letter spacing, alignment, and textAutoResize
 
@@ -334,7 +335,7 @@ in Figma, maintaining design consistency while reducing manual work.
 
 ### 3. Apply Overrides to Targets
 - For text overrides: use set_text(nodeId: "target-text-node-id", text: "copied text")
-- For fill overrides: use set_fills(nodeId: "target-node-id", color: "#hexcolor")
+- For fill overrides: use set_fills(nodeId: "target-node-id", color: "#hexcolor") for solids, or fills: [...] for gradients
 - For stroke overrides: use set_strokes(nodeId: "target-node-id", color: "#hexcolor")
 - Process targets one at a time or identify patterns to apply systematically
 

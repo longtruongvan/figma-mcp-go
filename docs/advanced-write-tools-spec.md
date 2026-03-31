@@ -164,3 +164,69 @@ Output:
 Ghi chu:
 - Uu tien resolve theo `componentId`, sau do `componentKey`, sau do `name`.
 - `componentProperties` cho phep set variant properties va cac component properties co san.
+
+## 6. `set_corner_radius`
+
+Muc dich:
+- Dieu khien bo goc sau khi node da duoc tao, thay vi phai ve lai rectangle/frame.
+
+Node ho tro:
+- Cac node co `cornerRadius`
+- Neu can bo tung goc, node phai ho tro `topLeftRadius`, `topRightRadius`, `bottomRightRadius`, `bottomLeftRadius`
+
+Input:
+- `nodeId` bat buoc
+- `cornerRadius?`
+- `topLeftRadius?`
+- `topRightRadius?`
+- `bottomRightRadius?`
+- `bottomLeftRadius?`
+
+Output:
+- `id`, `name`
+- tap field radius da ap dung
+
+Ghi chu:
+- Co the truyen `cornerRadius` de set deu, sau do override tung goc bang 4 field rieng.
+- Uu tien tool nay cho card, button, chip, image mask, hero surface.
+
+## 7. `set_fills` (enhanced)
+
+Muc dich:
+- Giu backward compatibility cho solid fill don gian
+- Bo sung gradient fills de UI bot phang va generic
+
+Input:
+- `nodeId` bat buoc
+- Cach 1:
+  - `color`
+  - `opacity?`
+- Cach 2:
+  - `fills?`: mang paint object
+
+Paint object ho tro:
+- `SOLID`
+  - `type: "SOLID"`
+  - `color`
+  - `opacity?`
+  - `visible?`
+  - `blendMode?`
+- Gradient:
+  - `type: "GRADIENT_LINEAR" | "GRADIENT_RADIAL" | "GRADIENT_ANGULAR" | "GRADIENT_DIAMOND"`
+  - `stops`: it nhat 2 stop
+  - `angle?`: do, dung de xoay gradient
+  - `opacity?`
+  - `visible?`
+  - `blendMode?`
+
+Gradient stop:
+- `position`: tu 0 den 1
+- `color`
+- `opacity?`
+
+Output:
+- `id`, `name`
+
+Ghi chu:
+- Neu truyen `fills: []` thi clear fill.
+- Neu truyen ca `color` va `fills`, repo uu tien `fills`.
