@@ -77,6 +77,39 @@ which codex
 go build -o bin/figma-mcp-go ./cmd/figma-mcp-go
 ```
 
+**Refresh nhanh sau mỗi lần sửa code**
+
+Repo có sẵn script [`dev-refresh.sh`](dev-refresh.sh) để build lại Go server và plugin chỉ với một lệnh:
+
+```bash
+./dev-refresh.sh
+```
+
+Nếu shell của bạn không chạy trực tiếp file `.sh`, dùng:
+
+```bash
+bash dev-refresh.sh
+```
+
+Một vài mode hay dùng:
+
+```bash
+./dev-refresh.sh --skip-go
+./dev-refresh.sh --skip-plugin
+./dev-refresh.sh --restart-codex
+```
+
+Ý nghĩa:
+- `--skip-go`: chỉ rebuild plugin Figma
+- `--skip-plugin`: chỉ rebuild Go MCP server
+- `--restart-codex`: build xong thì restart Codex app trên macOS
+
+Sau khi chạy script:
+1. Nếu phần Go server thay đổi, hãy mở thread Codex mới hoặc restart Codex.
+2. Nếu phần plugin thay đổi, hãy đóng và mở lại plugin `Figma MCP Go` trong Figma.
+3. Kiểm tra badge `Connected`.
+4. Smoke test bằng `get_metadata`.
+
 **Trỏ Codex sang binary local**
 ```bash
 codex mcp remove figma-mcp-go
@@ -199,11 +232,13 @@ Flow này đặc biệt hữu ích sau khi:
 
 - Chạy `cd plugin && npm install && npm run build` trước khi import manifest.
 - Build lại sau mỗi lần sửa file trong `plugin/src/`.
+- Hoặc dùng `./dev-refresh.sh --skip-go` để rebuild plugin nhanh hơn.
 
 **Lưu ý riêng cho Codex**
 
 - Sau khi chạy `codex mcp add ...`, các thread cũ có thể chưa nhận MCP server mới ngay.
 - Nếu Codex vẫn chưa thấy server, hãy mở thread mới hoặc restart app/CLI session.
+- Nếu bạn vừa sửa cả Go server lẫn plugin local, chạy `./dev-refresh.sh --restart-codex` là cách an toàn nhất.
 
 ### 5. Dùng Codex để generate UI trực tiếp vào Figma
 
