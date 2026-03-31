@@ -40,14 +40,14 @@ Install via `npx` — no build step required. Watch the setup video or follow th
 
 [![Watch the video](https://img.youtube.com/vi/DjqyU0GKv9k/sddefault.jpg)](https://youtu.be/DjqyU0GKv9k)
 
-### Prerequisites
+### Điều kiện cần
 
 - Figma Desktop
-- Node.js 18+ and `npm`/`npx`
-- An MCP-compatible AI client such as Codex, Claude Code, Cursor, VS Code, or GitHub Copilot
-- For local plugin development from this repo: `npm install` support in the `plugin/` directory
+- Node.js 18+ cùng `npm`/`npx`
+- Một AI client hỗ trợ MCP như Codex, Claude Code, Cursor, VS Code, hoặc GitHub Copilot
+- Nếu muốn build plugin local từ repo này: cần chạy được `npm install` trong thư mục `plugin/`
 
-### 1. Configure your AI tool
+### 1. Cấu hình AI tool
 
 **Codex CLI**
 ```bash
@@ -87,79 +87,131 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 }
 ```
 
-### 2. Install the Figma plugin
+### 2. Cài plugin Figma
 
-You have two options:
+Bạn có 2 cách:
 
-**Option A — use the release plugin (fastest)**
-1. In Figma Desktop: **Plugins → Development → Import plugin from manifest**
-2. Select `manifest.json` from the [plugin.zip](https://github.com/vkhanhqui/figma-mcp-go/releases)
-3. Run the plugin inside any Figma file
+**Cách A — dùng plugin từ release (nhanh nhất)**
+1. Trong Figma Desktop: **Plugins → Development → Import plugin from manifest**
+2. Chọn `manifest.json` từ [plugin.zip](https://github.com/vkhanhqui/figma-mcp-go/releases)
+3. Chạy plugin trong bất kỳ file Figma nào
 
-**Option B — build the plugin locally from this repo**
+**Cách B — build plugin local từ repo này**
 ```bash
 cd plugin
 npm install
 npm run build
 ```
 
-Then:
-1. In Figma Desktop: **Plugins → Development → Import plugin from manifest**
-2. Select [`plugin/manifest.json`](plugin/manifest.json)
-3. Run the plugin inside any Figma file
+Sau đó:
+1. Trong Figma Desktop: **Plugins → Development → Import plugin from manifest**
+2. Chọn [`plugin/manifest.json`](plugin/manifest.json)
+3. Chạy plugin trong bất kỳ file Figma nào
 
-The local manifest points to:
+Manifest local sẽ trỏ tới:
 - `plugin/dist/code.js`
 - `plugin/dist/index.html`
 
-### 3. Start your AI client and verify the connection
+### 3. Mở AI client và kiểm tra kết nối
 
-1. Restart or reopen your AI client after adding the MCP server.
-2. Open any Figma file in Figma Desktop.
-3. Run the `Figma MCP Go` plugin.
-4. Wait for the badge to change from `Disconnected` to `Connected`.
-5. Test with a simple MCP call such as:
+1. Restart hoặc mở lại AI client sau khi add MCP server.
+2. Mở bất kỳ file Figma nào trong Figma Desktop.
+3. Chạy plugin `Figma MCP Go`.
+4. Đợi badge chuyển từ `Disconnected` sang `Connected`.
+5. Test bằng một MCP call đơn giản như:
 
 ```text
 get_metadata
 ```
 
-If the bridge is working, you should get back the current file name, page name, and page IDs.
+Nếu bridge hoạt động đúng, bạn sẽ nhận được tên file hiện tại, tên trang, và ID các page.
 
-### 4. Quick local smoke test
+### 4. Kiểm tra nhanh bằng local smoke test
 
-If you want to verify the server outside your AI client, run:
+Nếu muốn kiểm tra server bên ngoài AI client, chạy:
 
 ```bash
 npx -y @vkhanhqui/figma-mcp-go@latest
 ```
 
-Then open the Figma plugin. It should connect to `ws://localhost:1994/ws`.
+Sau đó mở plugin Figma. Plugin sẽ kết nối tới `ws://localhost:1994/ws`.
 
-This is especially useful after:
-- moving to a new machine
-- reinstalling macOS
-- resetting your AI client config
-- debugging a `Disconnected` plugin state
+Flow này đặc biệt hữu ích sau khi:
+- chuyển sang máy mới
+- cài lại macOS
+- reset config của AI client
+- debug tình trạng plugin bị `Disconnected`
 
-### Troubleshooting
+### Xử lý sự cố
 
-**Plugin stays `Disconnected`**
+**Plugin vẫn hiện `Disconnected`**
 
-- Make sure your AI client has actually started the MCP server. Adding config alone is not enough.
-- Restart the AI client or open a new session after `mcp add`.
-- For a manual check, run `npx -y @vkhanhqui/figma-mcp-go@latest` in a terminal, then reopen the plugin.
-- Confirm nothing is blocking local port `1994`.
+- Hãy chắc chắn AI client của bạn đã thực sự khởi động MCP server. Chỉ thêm config thôi thì chưa đủ.
+- Restart AI client hoặc mở session mới sau khi chạy `mcp add`.
+- Nếu muốn kiểm tra thủ công, chạy `npx -y @vkhanhqui/figma-mcp-go@latest` trong terminal rồi mở lại plugin.
+- Kiểm tra xem có gì đang chặn local port `1994` hay không.
 
-**Using the local repo plugin**
+**Dùng plugin local trong repo**
 
-- Run `cd plugin && npm install && npm run build` before importing the manifest.
-- Rebuild after changing files in `plugin/src/`.
+- Chạy `cd plugin && npm install && npm run build` trước khi import manifest.
+- Build lại sau mỗi lần sửa file trong `plugin/src/`.
 
-**Codex-specific note**
+**Lưu ý riêng cho Codex**
 
-- After `codex mcp add ...`, existing threads may not immediately pick up the new MCP server.
-- If Codex does not see the server yet, open a new thread or restart the app/CLI session.
+- Sau khi chạy `codex mcp add ...`, các thread cũ có thể chưa nhận MCP server mới ngay.
+- Nếu Codex vẫn chưa thấy server, hãy mở thread mới hoặc restart app/CLI session.
+
+### 5. Dùng Codex để generate UI trực tiếp vào Figma
+
+Làm theo đúng flow này nếu bạn muốn Codex tạo hoặc chỉnh UI trực tiếp trong Figma:
+
+1. Hoàn thành các bước setup ở trên.
+2. Mở Figma Desktop và mở file mà bạn muốn làm việc.
+3. Chạy plugin `Figma MCP Go` trong file đó.
+4. Đợi badge của plugin chuyển sang `Connected`.
+5. Nếu bạn vừa mới add MCP server, hãy mở một thread Codex mới.
+6. Yêu cầu Codex tạo màn hình trong Figma bằng ngôn ngữ tự nhiên.
+7. Xem kết quả trực tiếp trên canvas Figma.
+8. Tiếp tục refine bằng cách yêu cầu Codex chỉnh spacing, màu, hierarchy, nội dung, hoặc bố cục.
+
+**Prompt mẫu — tạo một màn hình mobile mới**
+```text
+Dùng figma-mcp-go để tạo một màn hình mobile trong Figma.
+Kích thước: 390x844.
+Phong cách: premium, nhẹ nhàng, hiện đại.
+Chủ đề: app luyện thi Life in the UK.
+Bao gồm:
+- hero section
+- progress card
+- mock test card
+- study guide card
+- bottom navigation
+Dùng bảng màu navy, cream, red và gold.
+Đặt tên layer rõ ràng.
+```
+
+**Prompt mẫu — chỉnh một frame có sẵn**
+```text
+Dùng selection hiện tại trong Figma.
+Biến màn hình này thành một mobile UI sạch hơn và premium hơn.
+Tăng spacing, cải thiện hierarchy, giữ nguyên cấu trúc chính,
+và dùng bảng màu cream ấm cùng navy.
+```
+
+**Mẹo viết prompt**
+
+- Luôn nói rõ loại màn hình: mobile, desktop, dashboard, landing page, v.v.
+- Nếu biết kích thước thì nên ghi rõ, ví dụ `390x844` hoặc `1440x1024`.
+- Nêu rõ phong cách hình ảnh: premium, editorial, fintech, education, playful, minimal.
+- Liệt kê các section hoặc component mà bạn muốn xuất hiện trên màn hình.
+- Nếu muốn Codex sửa một thiết kế có sẵn, hãy chọn frame đó trong Figma trước rồi nói rõ là `dùng selection hiện tại`.
+
+**Nếu Codex không generate ra gì**
+
+- Kiểm tra xem plugin có còn hiện `Connected` không.
+- Mở một thread Codex mới.
+- Restart Codex nếu session hiện tại được tạo trước khi chạy `codex mcp add ...`.
+- Chạy local smoke test ở bước 4 để xác nhận bridge vẫn đang hoạt động.
 
 ---
 
