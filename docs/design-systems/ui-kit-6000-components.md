@@ -1,384 +1,119 @@
-# ui-kit-6000-components
+# Design System: UI Kit +6000 Components (Community)
 
-## Overview
+## Brand Colors
+- Purple: `#925FF0`
+- Green: `#A3FDA1`
+- Black/Gray: `#0B0B0B`
+- Yellow: `#FFE74C`
+- Red: `#FF5964`
+- Blue: `#35A7FF`
 
-- Nguon: file Figma `Design System _ UI kit _ +6000 Components (Community)`
-- Muc tieu profile: dung de generate UI bam sat visual language cua file nay, nhung chi khi nguoi dung goi ten profile.
-- Cach goi lai:
-  - `Dung design system ui-kit-6000-components`
-- Mac dinh:
-  - Khong tu dong ap dung neu nguoi dung khong nhac ten profile nay.
-
-## File Map
-
-### Foundations
-
-- `Layout Grid`
-- `Colors and Shadows`
-- `Fonts`
-- `Typography`
-- `Identificadores`
-
-### Iconography
-
-- `Icons`
-
-### Components
-
-- `Buttons`
-- `Tag`
-- `Inputs`
-- `Switch`
-- `Text Area`
-- `Dropdown`
-- `Rating`
-- `Checkbox`
-- `Menu`
-- `Navigation Bars`
-- `Cards`
-- `Hero`
-
-### Supporting / Showcase
-
-- `Cover`
-- `Patterns and Decoration`
-- cac page divider `----- Foundations -----`, `----- Atoms -----`, `----- Molecules -----`, `----- Organisms -----`
-
-## Design Tokens
-
-### Color System
-
-- He thong mau duoc to chuc theo scale `0 -> 10`, khong theo token semantic.
-- Co 1 palette trung tinh:
-  - `Main Colors/Gray/...`
-- Co 2 palette chinh mang tinh thuong hieu:
-  - `Main Colors/Purple/...`
-  - `Main Colors/Green/...`
-- Co nhom mau bo tro / accent:
-  - `Complementary Colors/Blue/...`
-  - `Complementary Colors/Red/...`
-  - `Complementary Colors/Yellow/...`
-- Mau nen co xu huong rat sach:
-  - `White`
-  - nhieu card/frame dung nen trang
-- Hue chu dao de generate UI:
-  - primary brand: purple
-  - secondary accent: green
-  - supportive accent: blue / red / yellow
-  - neutral text/surface: gray scale
-
-### Color Usage Rules
-
-- `Gray` la xương sống cho text, border nhe, neutral surface, va cac trang thai subdued.
-- `Purple` la mau brand chinh:
-  - hop cho CTA chinh
-  - highlight marketing
-  - heading accent
-  - visual hero element
-- `Green` dong vai tro accent thuong hieu thu hai:
-  - dung cho secondary emphasis
-  - supportive badge
-  - success-biased callout neu can
-- `Blue`, `Red`, `Yellow` nen xem la complementary / semantic-supportive:
-  - `Blue` cho thong tin bo tro
-  - `Red` cho canh bao, destructive, hoac accent nong
-  - `Yellow` cho warning hoac decorative contrast co kiem soat
-- Rule tong quat:
-  - uu tien bat dau tu nen trang + gray text + 1 mau brand chinh
-  - chi them complementary colors khi can semantic hoac muon tang nhip thi giac
-  - khong nen day qua nhieu mau nong vao cung mot section
-
-### Shadows
-
-- File co 8 effect styles local:
-  - `Purple/0`, `Purple/2px`, `Purple/4px`, `Purple/6px`
-  - `Gray/0`, `Gray/2px`, `Gray/4px`, `Gray/6px`
-- Pattern shadow:
-  - radius tang dan 4 / 8 / 12
-  - offset y tang dan 2 / 4 / 6
-  - opacity rat nhe
-- Rule:
-  - shadow duoc dung de tao depth mem, khong theo huong heavy neumorphism
-
-### Grid
-
-- Co 3 local grid styles:
-  - `Web Layout`
-  - `Ipad Layout`
-  - `Mobile Layout`
-- He thong nay co y thuc responsive ngay tu foundation.
-
-### Variables
-
-- `get_variable_defs` tra ve rong.
-- Nghia la file nay dang dua vao local styles + component variants, chua dua vao Figma Variables lam token system chinh.
+## Color Styles (key values)
+- `Main Colors/Purple/5` → `#925FF0` (primary)
+- `Main Colors/Green/5` → `#A3FDA1` (secondary)
+- `Main Colors/Gray/10` → `#000000` (darkest)
+- `Main Colors/Gray/-1` → `#E6E6E6` (lightest)
+- `White` → `#FFFFFF`
 
 ## Typography
+| Style | Font | Size | Weight |
+|---|---|---|---|
+| H0 | Anton | 48px | Regular |
+| H1 | Gotham | 36px | Black |
+| H2 | Gotham | 28px | Bold |
+| H3 | Gotham | 22px | Bold |
+| H4 | Gotham | 20px | Book |
+| P1 | Gotham | 14px | Book |
+| P2 | Gotham | 12px | Light |
+| P3 | Gotham | 16px | Book |
+| P4 | Gotham | 10px | Book |
 
-### Font Families
-
-- `Anton`
-- `Gotham Black`
-- `Gotham`
-
-### Type Scale Snapshot
-
-- `48 / Anton / Regular`
-- `36 / Gotham Black`
-- `28 / Gotham Bold`
-- `22 / Gotham Bold`
-- `20 / Gotham Book`
-- `16 / Gotham Book`
-- `14 / Gotham Book`
-- `12 / Gotham Light`
-- `10 / Gotham Book`
-
-### Local Text Styles
-
-- `H0/Anton/Regular/Active/Left`
-- `H1/Gotham/Black/Active/Center-Left`
-- `H2/Gotham/Bold/Active/Center-Left`
-- `H3/Gotham/Bold/Active/Center-Left`
-- `H4/Gotham/Book/Active/Left`
-- `P1/Gotham/Book/Active/Left`
-- `P2/Gotham/Light/Active/Left`
-- `P3/Gotham/Book/Active/left`
-- `P4/Gotham/Book/Active/Left`
-
-### Typography Rules
-
-- Headline display dung `Anton` cho impact manh.
-- He thong heading con lai dua vao `Gotham` / `Gotham Black`.
-- Letter spacing thuong am nhe `-5%` cho phan Gotham.
-- Line-height thuong rat chat, gan `100%`.
-- Cam giac chung:
-  - modern
-  - graphic
-  - co tinh editorial / marketing
-  - khong phai corporate-neutral
-
-### Default Text Rules
-
-- `Anton` nen duoc xem la display font:
-  - dung cho hero headline
-  - campaign phrase
-  - section title can impact manh
-  - khong nen dung cho paragraph dai
-- `Gotham Black` / `Gotham Bold` dung cho:
-  - heading cap 1 / cap 2
-  - card title
-  - CTA title
-- `Gotham Book` la default cho:
-  - body copy
-  - supporting text
-  - form labels
-  - paragraph ngan
-- `Gotham Light` xuat hien o size nho:
-  - phu hop caption hoac muted supporting note
-  - khong nen dung lam body text chinh trong section dai
-
-### Weight Rules
-
-- `Black` dung khi can hierarchy rat ro hoac can nhan heading tren background phuc tap.
-- `Bold` la muc nhan manh mac dinh, an toan hon `Black`, hop cho subheading va title trong component.
-- `Book` la trong luong van ban chuan cua he nay.
-- `Light` chi nen dung cho phu de nho, metadata, hoac supporting microcopy.
-- Rule tong quat:
-  - uu tien contrast bang scale + weight + space, khong chi bang doi mau
-  - tranh dung qua nhieu `Light` trong mot section vi se lam UI giong demo/spec hon la san pham that
-
-### Alignment And Tone
-
-- Local style naming cho thay canh trai la mac dinh an toan nhat.
-- Mot so heading style cho phep `Center-Left`, nhung van giu tinh than layout co truc va canh chuan.
-- Typography cua file nay nghieng ve:
-  - marketing
-  - polished product
-  - editorial landing
-- No khong nghieng ve:
-  - docs-heavy interface
-  - enterprise bang bieu day text
-  - mobile native minimal tuyet doi
-
-### Italic / Underline / Rich Text Controls
-
-- Trong profile nay, `italic`, `bold`, `underline`, `link`, `attach`, `task` xuat hien ro trong page `Text Area` duoi dang action/control icon.
-- Dieu nay cho thay:
-  - file co ho tro ngu canh rich text editor
-  - nhung `italic` va `underline` khong phai la lop core typography style cua he thong nhu `H1`, `H2`, `P1`, `P2`
-- Rule:
-  - mac dinh UI theo profile nay nen dua vao hierarchy bang font family, scale, weight, color, va spacing
-  - chi dung italic/underline khi context la editor, rich text, link emphasis, hoac formatting tool
-  - khong nen bien italic thanh phong cach body mac dinh cua man hinh
-
-## Iconography
-
-### Icon Library Direction
-
-- Page `Icons` cho thay icon duoc component hoa theo namespace `vuesax/...`.
-- Co nhieu style family, it nhat thay ro:
-  - `vuesax/linear/...`
-  - `vuesax/broken/...`
-  - mot so icon `bold` duoc dung lam status / semantic accent
-
-### Icon Style Rules
-
-- Mac dinh icon line rat sach, stroke toi mau `#292d32`.
-- Icon duoc dat trong component rieng va duoc reuse trong button/input/card/menu.
-- Khi generate UI moi:
-  - uu tien `linear` cho default UI
-  - dung `bold` cho status success/error/warning neu can nhan manh
-  - giu cung mot family trong cung mot man
-
-### Practical Defaults
-
-- default icon style:
-  - `vuesax/linear`
-- when to use `broken`:
-  - khi muon decorative accent hoac can chat minh hoa / ca tinh hon
-  - khong dung lam default cho toan bo man
-- when to use `bold`:
-  - cho status icon, semantic emphasis, hoac diem nhan nho trong form / feedback
-  - khong dung `bold` lam family icon chinh cho ca man neu khong co ly do ro rang
+## Shadow Styles
+- `Purple/6px` — drop shadow y:6 radius:12
+- `Purple/4px` — drop shadow y:4 radius:8
+- `Purple/2px` — drop shadow y:2 radius:4
+- `Gray/6px` — drop shadow y:6 radius:12
+- `Gray/4px` — drop shadow y:4 radius:8
+- `Gray/2px` — drop shadow y:2 radius:4
 
 ## Components
 
-### Buttons
+### Buttons — `58:1436`
+Variants: Style (Primary/Secondary/Outline/Text/Rounded/Square) × State (Default/Hover/Pressed/Focused/Disabled)
 
-- Page `Buttons` rat day variant.
-- Co `COMPONENT_SET` lon ten `Buttons`.
-- Naming pattern:
-  - `Content=...`
-  - `Size=Small|Medium|Large`
-  - `Type=Primary|Secondary|Outliine|Text-only|Rounded|Square|Negative`
-  - `State=Default|Hover|Pressed|Focused|Disabled`
-  - `Style=Light|Dark`
-- Kieu content:
-  - `Text`
-  - `Text-icon`
-  - `Icon`
-- Rule:
-  - khi generate, uu tien dung button variants thay vi tu ve rectangle + text
-  - voi man sang, uu tien `Style=Light`
-  - voi hero dark, co the dung `Style=Dark`
+### Navigation Bars — `67:3651`
+Variants: Size (complete/rounded/round) × Mode (both) × Color (purple/purple-light/white/purple-dark/black/green-light/outline) × distribution (center/left/right/icon)
 
-### Inputs
+### Cards (Product) — `252:9415`
+Variants: Property 1 (Default/Variant2/Variant3)
+- `252:9414` Default — 200×286
+- `252:9416` Variant2 — 240×286
+- `252:9493` Variant3 — 320×235
 
-- Page `Inputs` co he component rat ky luong.
-- Co `COMPONENT_SET` lon ten `Input Text`.
-- Axes/props thay ro:
-  - `State=Default|Hover|Focused|Disabled|Filled`
-  - `Status=Default|Error|Success`
-  - `Icon=On|Off`
-  - `Helper Text=On|Off`
-  - `Label=On|Off`
-  - `Second Label` hoac `Secondary Label` = `On|Off`
-- Input dung icon suffix/prefix theo context:
-  - `eye`
-  - `tick-circle`
-  - `info-circle`
-  - `warning-2`
-  - `tick-square`
-- Rule:
-  - neu can form polished, uu tien dung variants san co cua `Input Text`
-  - khong nen tu ve input bang frame/rectangle neu profile nay da duoc goi
+Other card components:
+- `249:9383` Send Invitation — 370×429
+- `248:8765` LogIn — 310×359
+- `237:9349` Vertical Menu — 260×306
 
-### Cards
+### Input Text — `147:4375`
+Variants: State (Default/Hover/Focused/Filled/Disabled) × Status (Default/Error/Success) × Icon (On/Off) × Helper Text (On/Off) × Label (On/Off) × Second Label (On/Off)
 
-- Page `Cards` co it nhat cac mau:
-  - product card
-  - invitation / form card
-  - login card
-  - vertical menu card
-  - card thong tin nho
-- Card thuong:
-  - nen trang
-  - radius lon
-  - icon vuesax
-  - dung tag/button/input co san ben trong
-- Rule:
-  - card cua he nay co xu huong “clean marketing card”, khong qua data-dense
+### Input Tags — `151:8720`
+Same variants as Input Text
 
-### Navigation Bars
+### Input Big — `153:12268`
+Variants: State × Status × Icon × Helper Text × Label × Secondary Label
 
-- Duoc dung lai trong `Hero`.
-- Co cac sub-instance:
-  - `Logo`
-  - `Options`
-  - `Buttons`
-- Rule:
-  - top nav mang tinh landing page / website nhieu hon mobile app tab bar
+### Tags — `150:8530`
+Variants: Icon (On/Off) × Style (Disabled/Primary/Danger/Info/Success/Warning) × Border (On/Off)
 
-### Hero
+### Progress Tags — `94:4202`
+Variants: State (on/off) × progress (not-started/done/in-progress/Delayed) × border (on/off)
 
-- Page `Hero` cho thay day la he design nghiêng ve marketing / landing hero.
-- Hero component thuong compose tu:
-  - `Navigation Bars`
-  - visual pattern hoac astronaut / sculpture
-  - large headline
-  - primary CTA button
-- Rule:
-  - neu can tao hero section theo profile nay, uu tien visual composition manh, khong lam qua flat
+### Menu Vertical (with icon) — `237:8239`
+Variants: State (Default/Hover/Focused/Pressed/Disabled/Active) × icon (on/off) × arrow (on/off)
 
-## Layout Rules
+### Menu Vertical (no icon) — `237:8929`
+Variants: State × arrow (on/off)
 
-- Card/frame thuong nen trang, radius lon, spacing rong.
-- Co phan biet ro `Light` va `Dark` style o level component.
-- He thong thich hop cho:
-  - landing page
-  - marketing site
-  - polished SaaS sections
-  - premium concept screens
-- He thong khong nghieng ve:
-  - iOS-native minimal
-  - enterprise dashboard khac nghiet
-  - brutalism
+### Checkbox — `236:8243`
+Variants: Status (Active/Inactive) × State (Default/Hover/Focused/Disabled) × Label (on/off)
 
-## Naming Conventions
+### Rating — `164:10449`
+Variants: Number (1-5) × Style (Hearts/Stars) × Label (On/Off) × Unselected Items (On/Off)
 
-- Text styles dat ten rat cau truc theo:
-  - `Level/Font/Weight/State/Alignment`
-- Buttons va inputs dat ten theo variant props thay vi ten chung chung.
-- Icon components theo namespace:
-  - `vuesax/<style>/<name>`
+### Switch — `131:4240`
+Variants: State (on/off) × Style (main/hover/border/inactive) × Label (on/off) × Inner Label (On/Off)
 
-## Prompt Tips
+### Switch Mode — `158:6795`
+Variants: Mode (Light/Dark) × Style (Default/Hover/Border/Disabled) × Icon × Inner Icon × Label × Outside Icons
 
-- Khi dung profile nay, nhac ro:
-  - su dung `Anton` cho display headline neu hop ngu canh
-  - dung `Gotham` cho heading/body
-  - uu tien palette purple / green / gray
-  - dung components san co cho button, input, nav, card
-  - giu icon family `vuesax/linear` dong nhat
+### Dropdown — `236:8114`
+Variants: State (Default/Hover/Focused/Pressed/Disabled) × Open (True/False)
 
-- Prompt mau:
-  - `Dung design system ui-kit-6000-components de tao mot hero landing page sang trong, dung heading display Anton, body Gotham, palette purple va green, icon family vuesax/linear, va uu tien component buttons/cards/navigation bars co san.`
+### Text Area — `164:6981`
+Variants: State (Default/Hover/Focused/Disabled) × Label (On/Off) × Helper Text (On/Off) × Text Options (On/Off)
 
-## Do / Don't
+### Logo — `22:55`
+Variants: Negative/Green/Purple/Positive/White
 
-### Do
+### Logo (icon) — `22:56`
+Variants: Icon × (Positive/Negative/White/Purple-Only/Green-Only)
 
-- Dung component variants truoc khi tu ve tay.
-- Dung local styles cho text, paint, effect neu co the.
-- Dung palette purple / green / neutral lam cot song.
-- Dung shadows nhe va radius lon de giu chat polished.
-- Dung icons cung family trong cung mot man.
+### Patterns — `305:8238`
+Single pattern component
 
-### Don't
+### Astronauts — `104:4196`
+Variants: Default/Astronaut 2/Astronaut 3
 
-- Khong tron nhieu icon family khac nhau.
-- Khong bien style nay thanh dark cyberpunk neu khong co ly do ro rang.
-- Khong dung typography system default `Inter everywhere` khi da goi profile nay.
-- Khong tu ve input/button generic neu variant san co da du.
-- Khong mac dinh dung profile nay neu user khong nhac ten.
+### Escultures — `113:4175`
+Variants: Number 1-12
 
-## Operational Notes
+## Icons
+6 styles: Linear, Outline, Bold, Two Tone, Bulk, Broken
+Categories: Money, Arrow, Weather, Users, Files, Emails, Design Tools, Location, Shop, Delivery, Security, Content, Notifications, Settings, Essential, Business, Building, Astrology, Search, Call, Programing, Archive, Time, Grid, Crypto Currency, School, Car, Computers/Devices
 
-- `get_local_components` toan file hien dang loi vi mot `component set` trong file co san loi variant metadata:
-  - `in get_variantProperties: Component set for node has existing errors`
-- Tuy vay, profile nay van su dung duoc tot thong qua:
-  - page map
-  - local styles
-  - scan page theo component category
-- Neu can generate man bam sat profile:
-  - uu tien doc lai cac page `Buttons`, `Inputs`, `Cards`, `Navigation Bars`, `Hero`, `Icons` truoc khi viet vao Figma
+## Layout Grids
+- Desktop: 1512px, 12 columns, 20px gutter, 100px offset
+- iPad: 1024px, 8 columns, 20px gutter, 80px offset
+- Mobile: 430px, 4 columns, 8px gutter, 22px offset

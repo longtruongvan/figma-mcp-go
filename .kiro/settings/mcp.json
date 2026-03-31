@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "figma-mcp-go": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@vkhanhqui/figma-mcp-go@latest"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "get_metadata",
+        "create_frame",
+        "create_ellipse",
+        "create_text",
+        "set_strokes",
+        "set_fills",
+        "move_nodes",
+        "get_screenshot",
+        "get_local_components",
+        "get_design_context",
+        "scan_nodes_by_types",
+        "scan_nodes_by_types",
+        "scan_nodes_by_types",
+        "search_nodes",
+        "search_nodes",
+        "get_styles",
+        "get_fonts",
+        "get_variable_defs"
+      ]
+    }
+  }
+}
