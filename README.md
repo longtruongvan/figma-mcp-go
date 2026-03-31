@@ -46,6 +46,50 @@ Install via `npx` — no build step required. Watch the setup video or follow th
 - Node.js 18+ cùng `npm`/`npx`
 - Một AI client hỗ trợ MCP như Codex, Claude Code, Cursor, VS Code, hoặc GitHub Copilot
 - Nếu muốn build plugin local từ repo này: cần chạy được `npm install` trong thư mục `plugin/`
+- Nếu muốn build binary Go local từ source: cần cài `go`
+
+### Bổ sung cho Codex local trên macOS
+
+Nếu bạn muốn dùng chính source code trong repo này thay vì bản `npx` đã publish, hãy chuẩn bị như sau:
+
+**Cài Go**
+```bash
+brew install go
+go version
+```
+
+**Cài Codex**
+
+- Cài ứng dụng Codex trên macOS.
+- Sau khi cài xong, binary CLI thường nằm ở:
+  - `/Applications/Codex.app/Contents/Resources/codex`
+
+Nếu terminal báo `zsh: command not found: codex`, hãy export PATH:
+
+```bash
+echo 'export PATH="/Applications/Codex.app/Contents/Resources:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+which codex
+```
+
+**Build binary local từ repo này**
+```bash
+go build -o bin/figma-mcp-go ./cmd/figma-mcp-go
+```
+
+**Trỏ Codex sang binary local**
+```bash
+codex mcp remove figma-mcp-go
+codex mcp add figma-mcp-go -- /Users/truongvanlong/Documents/GitHub/figma-mcp-go/bin/figma-mcp-go
+```
+
+**Kiểm tra lại MCP server trong Codex**
+```bash
+codex mcp list
+codex mcp get figma-mcp-go
+```
+
+Sau đó hãy restart Codex hoặc mở thread mới để Codex nhận config mới.
 
 ### 1. Cấu hình AI tool
 
