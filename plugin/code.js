@@ -1238,6 +1238,7 @@ var __async = (__this, __arguments, generator) => {
         const node = yield figma.getNodeByIdAsync(nodeId);
         if (!node) throw new Error(`Node not found: ${nodeId}`);
         node.name = p.name;
+        figma.commitUndo();
         return {
           type: request.type,
           requestId: request.requestId,

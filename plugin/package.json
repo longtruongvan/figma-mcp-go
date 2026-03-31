@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite build --watch\" \"vite build --watch -c vite.config.main.ts\"",
-    "build": "vite build && vite build -c vite.config.main.ts"
+    "dev": "concurrently \"vite build --watch\" \"vite build --watch -c vite.config.main.ts\" \"node scripts/sync-build.mjs --watch\"",
+    "build": "vite build && vite build -c vite.config.main.ts && node scripts/sync-build.mjs"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1",

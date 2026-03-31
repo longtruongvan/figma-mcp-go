@@ -92,15 +92,18 @@ func RegisterPrompts(s *server.MCPServer) {
 5. Element Creation:
    - Use create_frame() for containers and input fields
    - Use create_text() for labels, buttons text, and links
+   - When creating multi-line or wrapped text, set width and textAutoResize intentionally
    - Set appropriate colors and styles:
      * Use fillColor for backgrounds
      * Use set_strokes() for borders
      * Set proper fontStyle for different text elements
+     * Use set_effects() only when subtle depth or blur improves hierarchy
 
 6. Modifying existing elements:
    - Use set_text() to modify text content of a TEXT node
    - Use set_fills() to change background/fill colors
-   - Use move_nodes() / resize_nodes() for position and size adjustments
+   - Use move_nodes() / resize_nodes() for position and size adjustments on non-TEXT nodes
+   - Use set_text_style() for TEXT sizing, line height, letter spacing, alignment, and textAutoResize
 
 7. Visual Hierarchy:
    - Position elements in logical reading order (top to bottom)

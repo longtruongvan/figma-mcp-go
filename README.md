@@ -443,7 +443,7 @@ Phong cách:
 | `create_frame` | Create a frame with optional auto-layout, fill, and parent |
 | `create_rectangle` | Create a rectangle with optional fill and corner radius |
 | `create_ellipse` | Create an ellipse or circle |
-| `create_text` | Create a text node (font loaded automatically) |
+| `create_text` | Create a text node with optional font, alignment, spacing, and text-box sizing controls |
 | `import_image` | Decode base64 image and place it as a rectangle fill |
 
 ### Write — Modify
@@ -454,12 +454,12 @@ Phong cách:
 | `set_fills` | Set solid fill color (hex) on a node |
 | `set_strokes` | Set solid stroke color and weight on a node |
 | `set_layout_properties` | Update auto-layout, sizing, spacing, and layout-child properties |
-| `set_text_style` | Update typography properties such as font, line height, spacing, and alignment |
+| `set_text_style` | Update typography plus TEXT sizing controls such as width, height, and textAutoResize |
 | `set_effects` | Replace node effects with shadows and/or blurs |
 | `apply_styles` | Apply local fill, stroke, effect, and text styles by style ID |
 | `create_instance` | Create an instance from a local component by ID, key, or name |
 | `move_nodes` | Move nodes to an absolute x/y position |
-| `resize_nodes` | Resize nodes by width and/or height |
+| `resize_nodes` | Resize non-TEXT nodes by width and/or height |
 | `rename_node` | Rename a node |
 | `clone_node` | Clone a node, optionally repositioning or reparenting |
 

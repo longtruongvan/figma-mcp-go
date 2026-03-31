@@ -9,7 +9,7 @@ export default defineConfig({
       name: "code",
       fileName: () => "code.js",
     },
-    outDir: ".",
+    outDir: "dist",
     emptyOutDir: false,
     minify: false,
   },

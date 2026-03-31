@@ -448,6 +448,7 @@ export const handleWriteRequest = async (request: any) => {
       const node = await figma.getNodeByIdAsync(nodeId);
       if (!node) throw new Error(`Node not found: ${nodeId}`);
       node.name = p.name;
+      figma.commitUndo();
       return {
         type: request.type,
         requestId: request.requestId,
