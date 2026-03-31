@@ -67,6 +67,27 @@
   - supportive accent: blue / red / yellow
   - neutral text/surface: gray scale
 
+### Color Usage Rules
+
+- `Gray` la xương sống cho text, border nhe, neutral surface, va cac trang thai subdued.
+- `Purple` la mau brand chinh:
+  - hop cho CTA chinh
+  - highlight marketing
+  - heading accent
+  - visual hero element
+- `Green` dong vai tro accent thuong hieu thu hai:
+  - dung cho secondary emphasis
+  - supportive badge
+  - success-biased callout neu can
+- `Blue`, `Red`, `Yellow` nen xem la complementary / semantic-supportive:
+  - `Blue` cho thong tin bo tro
+  - `Red` cho canh bao, destructive, hoac accent nong
+  - `Yellow` cho warning hoac decorative contrast co kiem soat
+- Rule tong quat:
+  - uu tien bat dau tu nen trang + gray text + 1 mau brand chinh
+  - chi them complementary colors khi can semantic hoac muon tang nhip thi giac
+  - khong nen day qua nhieu mau nong vao cung mot section
+
 ### Shadows
 
 - File co 8 effect styles local:
@@ -100,6 +121,18 @@
 - `Gotham Black`
 - `Gotham`
 
+### Type Scale Snapshot
+
+- `48 / Anton / Regular`
+- `36 / Gotham Black`
+- `28 / Gotham Bold`
+- `22 / Gotham Bold`
+- `20 / Gotham Book`
+- `16 / Gotham Book`
+- `14 / Gotham Book`
+- `12 / Gotham Light`
+- `10 / Gotham Book`
+
 ### Local Text Styles
 
 - `H0/Anton/Regular/Active/Left`
@@ -123,6 +156,60 @@
   - graphic
   - co tinh editorial / marketing
   - khong phai corporate-neutral
+
+### Default Text Rules
+
+- `Anton` nen duoc xem la display font:
+  - dung cho hero headline
+  - campaign phrase
+  - section title can impact manh
+  - khong nen dung cho paragraph dai
+- `Gotham Black` / `Gotham Bold` dung cho:
+  - heading cap 1 / cap 2
+  - card title
+  - CTA title
+- `Gotham Book` la default cho:
+  - body copy
+  - supporting text
+  - form labels
+  - paragraph ngan
+- `Gotham Light` xuat hien o size nho:
+  - phu hop caption hoac muted supporting note
+  - khong nen dung lam body text chinh trong section dai
+
+### Weight Rules
+
+- `Black` dung khi can hierarchy rat ro hoac can nhan heading tren background phuc tap.
+- `Bold` la muc nhan manh mac dinh, an toan hon `Black`, hop cho subheading va title trong component.
+- `Book` la trong luong van ban chuan cua he nay.
+- `Light` chi nen dung cho phu de nho, metadata, hoac supporting microcopy.
+- Rule tong quat:
+  - uu tien contrast bang scale + weight + space, khong chi bang doi mau
+  - tranh dung qua nhieu `Light` trong mot section vi se lam UI giong demo/spec hon la san pham that
+
+### Alignment And Tone
+
+- Local style naming cho thay canh trai la mac dinh an toan nhat.
+- Mot so heading style cho phep `Center-Left`, nhung van giu tinh than layout co truc va canh chuan.
+- Typography cua file nay nghieng ve:
+  - marketing
+  - polished product
+  - editorial landing
+- No khong nghieng ve:
+  - docs-heavy interface
+  - enterprise bang bieu day text
+  - mobile native minimal tuyet doi
+
+### Italic / Underline / Rich Text Controls
+
+- Trong profile nay, `italic`, `bold`, `underline`, `link`, `attach`, `task` xuat hien ro trong page `Text Area` duoi dang action/control icon.
+- Dieu nay cho thay:
+  - file co ho tro ngu canh rich text editor
+  - nhung `italic` va `underline` khong phai la lop core typography style cua he thong nhu `H1`, `H2`, `P1`, `P2`
+- Rule:
+  - mac dinh UI theo profile nay nen dua vao hierarchy bang font family, scale, weight, color, va spacing
+  - chi dung italic/underline khi context la editor, rich text, link emphasis, hoac formatting tool
+  - khong nen bien italic thanh phong cach body mac dinh cua man hinh
 
 ## Iconography
 
