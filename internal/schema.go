@@ -270,6 +270,214 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
 			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
 		}
+
+	case "set_layout_properties":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if !hasAnyParam(params,
+			"layoutMode", "layoutWrap",
+			"primaryAxisAlignItems", "counterAxisAlignItems",
+			"primaryAxisSizingMode", "counterAxisSizingMode",
+			"layoutSizingHorizontal", "layoutSizingVertical",
+			"layoutAlign", "layoutGrow", "layoutPositioning",
+			"paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+			"itemSpacing", "counterAxisSpacing", "clipsContent",
+		) {
+			return "at least one layout property is required"
+		}
+		if v, ok := params["layoutMode"].(string); ok && v != "" {
+			switch v {
+			case "HORIZONTAL", "VERTICAL", "NONE":
+			default:
+				return fmt.Sprintf("layoutMode must be HORIZONTAL, VERTICAL, or NONE, got: %s", v)
+			}
+		}
+		if v, ok := params["layoutWrap"].(string); ok && v != "" {
+			switch v {
+			case "NO_WRAP", "WRAP":
+			default:
+				return fmt.Sprintf("layoutWrap must be NO_WRAP or WRAP, got: %s", v)
+			}
+		}
+		if v, ok := params["primaryAxisAlignItems"].(string); ok && v != "" {
+			switch v {
+			case "MIN", "CENTER", "MAX", "SPACE_BETWEEN":
+			default:
+				return fmt.Sprintf("primaryAxisAlignItems must be MIN, CENTER, MAX, or SPACE_BETWEEN, got: %s", v)
+			}
+		}
+		if v, ok := params["counterAxisAlignItems"].(string); ok && v != "" {
+			switch v {
+			case "MIN", "CENTER", "MAX", "BASELINE":
+			default:
+				return fmt.Sprintf("counterAxisAlignItems must be MIN, CENTER, MAX, or BASELINE, got: %s", v)
+			}
+		}
+		if v, ok := params["primaryAxisSizingMode"].(string); ok && v != "" {
+			switch v {
+			case "FIXED", "AUTO":
+			default:
+				return fmt.Sprintf("primaryAxisSizingMode must be FIXED or AUTO, got: %s", v)
+			}
+		}
+		if v, ok := params["counterAxisSizingMode"].(string); ok && v != "" {
+			switch v {
+			case "FIXED", "AUTO":
+			default:
+				return fmt.Sprintf("counterAxisSizingMode must be FIXED or AUTO, got: %s", v)
+			}
+		}
+		if v, ok := params["layoutSizingHorizontal"].(string); ok && v != "" {
+			switch v {
+			case "FIXED", "HUG", "FILL":
+			default:
+				return fmt.Sprintf("layoutSizingHorizontal must be FIXED, HUG, or FILL, got: %s", v)
+			}
+		}
+		if v, ok := params["layoutSizingVertical"].(string); ok && v != "" {
+			switch v {
+			case "FIXED", "HUG", "FILL":
+			default:
+				return fmt.Sprintf("layoutSizingVertical must be FIXED, HUG, or FILL, got: %s", v)
+			}
+		}
+		if v, ok := params["layoutAlign"].(string); ok && v != "" {
+			switch v {
+			case "MIN", "CENTER", "MAX", "STRETCH", "INHERIT":
+			default:
+				return fmt.Sprintf("layoutAlign must be MIN, CENTER, MAX, STRETCH, or INHERIT, got: %s", v)
+			}
+		}
+		if v, ok := params["layoutPositioning"].(string); ok && v != "" {
+			switch v {
+			case "AUTO", "ABSOLUTE":
+			default:
+				return fmt.Sprintf("layoutPositioning must be AUTO or ABSOLUTE, got: %s", v)
+			}
+		}
+		if v, ok := params["layoutGrow"].(float64); ok && v != 0 && v != 1 {
+			return "layoutGrow must be 0 or 1"
+		}
+
+	case "set_text_style":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if !hasAnyParam(params,
+			"fontFamily", "fontStyle", "fontSize",
+			"textCase", "textAlignHorizontal", "textAlignVertical",
+			"paragraphSpacing", "lineHeight", "letterSpacing",
+		) {
+			return "at least one text style property is required"
+		}
+		if v, ok := params["fontSize"].(float64); ok && v <= 0 {
+			return "fontSize must be positive"
+		}
+		if v, ok := params["paragraphSpacing"].(float64); ok && v < 0 {
+			return "paragraphSpacing must be non-negative"
+		}
+		if v, ok := params["textCase"].(string); ok && v != "" {
+			switch v {
+			case "ORIGINAL", "UPPER", "LOWER", "TITLE", "SMALL_CAPS", "SMALL_CAPS_FORCED":
+			default:
+				return fmt.Sprintf("textCase is invalid: %s", v)
+			}
+		}
+		if v, ok := params["textAlignHorizontal"].(string); ok && v != "" {
+			switch v {
+			case "LEFT", "CENTER", "RIGHT", "JUSTIFIED":
+			default:
+				return fmt.Sprintf("textAlignHorizontal must be LEFT, CENTER, RIGHT, or JUSTIFIED, got: %s", v)
+			}
+		}
+		if v, ok := params["textAlignVertical"].(string); ok && v != "" {
+			switch v {
+			case "TOP", "CENTER", "BOTTOM":
+			default:
+				return fmt.Sprintf("textAlignVertical must be TOP, CENTER, or BOTTOM, got: %s", v)
+			}
+		}
+		if err := validateLineHeight(params["lineHeight"]); err != "" {
+			return err
+		}
+		if err := validateLetterSpacing(params["letterSpacing"]); err != "" {
+			return err
+		}
+
+	case "set_effects":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		rawEffects, ok := params["effects"]
+		if !ok {
+			return "effects is required"
+		}
+		effects, ok := rawEffects.([]interface{})
+		if !ok {
+			return "effects must be an array"
+		}
+		for i, raw := range effects {
+			effect, ok := raw.(map[string]interface{})
+			if !ok {
+				return fmt.Sprintf("effects[%d] must be an object", i)
+			}
+			t, _ := effect["type"].(string)
+			switch t {
+			case "DROP_SHADOW", "INNER_SHADOW":
+				if color, _ := effect["color"].(string); color == "" {
+					return fmt.Sprintf("effects[%d].color is required for %s", i, t)
+				}
+				if radius, ok := effect["radius"].(float64); ok && radius < 0 {
+					return fmt.Sprintf("effects[%d].radius must be non-negative", i)
+				}
+				if spread, ok := effect["spread"].(float64); ok && spread < 0 {
+					return fmt.Sprintf("effects[%d].spread must be non-negative", i)
+				}
+			case "LAYER_BLUR", "BACKGROUND_BLUR":
+				if radius, ok := effect["radius"].(float64); !ok || radius < 0 {
+					return fmt.Sprintf("effects[%d].radius is required and must be non-negative", i)
+				}
+			default:
+				return fmt.Sprintf("effects[%d].type is invalid: %s", i, t)
+			}
+		}
+
+	case "apply_styles":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if !hasAnyNonEmptyString(params, "fillStyleId", "strokeStyleId", "effectStyleId", "textStyleId") {
+			return "at least one style id is required"
+		}
+
+	case "create_instance":
+		if !hasAnyNonEmptyString(params, "componentId", "componentKey", "name") {
+			return "one of componentId, componentKey, or name is required"
+		}
+		if id, ok := params["componentId"].(string); ok && id != "" && !ValidNodeID(id) {
+			return fmt.Sprintf("componentId must use colon format e.g. 4029:12345, got: %s", id)
+		}
+		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
+			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
+		}
+		if props, ok := params["componentProperties"]; ok {
+			if _, ok := props.(map[string]interface{}); !ok {
+				return "componentProperties must be an object"
+			}
+		}
 	}
 
 	return ""
@@ -281,4 +489,64 @@ func validExportFormat(f string) bool {
 		return true
 	}
 	return false
+}
+
+func hasAnyParam(params map[string]interface{}, keys ...string) bool {
+	for _, key := range keys {
+		if _, ok := params[key]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func hasAnyNonEmptyString(params map[string]interface{}, keys ...string) bool {
+	for _, key := range keys {
+		if v, ok := params[key].(string); ok && v != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func validateLineHeight(raw interface{}) string {
+	if raw == nil {
+		return ""
+	}
+	obj, ok := raw.(map[string]interface{})
+	if !ok {
+		return "lineHeight must be an object"
+	}
+	unit, _ := obj["unit"].(string)
+	switch unit {
+	case "AUTO":
+		return ""
+	case "PIXELS", "PERCENT", "FONT_SIZE_%":
+		if value, ok := obj["value"].(float64); !ok || value < 0 {
+			return "lineHeight.value must be non-negative"
+		}
+		return ""
+	default:
+		return fmt.Sprintf("lineHeight.unit is invalid: %s", unit)
+	}
+}
+
+func validateLetterSpacing(raw interface{}) string {
+	if raw == nil {
+		return ""
+	}
+	obj, ok := raw.(map[string]interface{})
+	if !ok {
+		return "letterSpacing must be an object"
+	}
+	unit, _ := obj["unit"].(string)
+	switch unit {
+	case "PIXELS", "PERCENT":
+		if _, ok := obj["value"].(float64); !ok {
+			return "letterSpacing.value is required"
+		}
+		return ""
+	default:
+		return fmt.Sprintf("letterSpacing.unit is invalid: %s", unit)
+	}
 }

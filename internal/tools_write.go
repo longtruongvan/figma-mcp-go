@@ -189,6 +189,243 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 		return renderResponse(resp, err)
 	})
 
+	s.AddTool(mcp.NewTool("set_layout_properties",
+		mcp.WithDescription("Update auto-layout, sizing, spacing, and layout-child properties on a node."),
+		mcp.WithString("nodeId",
+			mcp.Required(),
+			mcp.Description("Node ID in colon format e.g. '4029:12345'"),
+		),
+		mcp.WithString("layoutMode",
+			mcp.Description("Auto-layout mode: HORIZONTAL, VERTICAL, or NONE"),
+			mcp.Enum("HORIZONTAL", "VERTICAL", "NONE"),
+		),
+		mcp.WithString("layoutWrap",
+			mcp.Description("Wrapping mode for auto-layout frames: NO_WRAP or WRAP"),
+			mcp.Enum("NO_WRAP", "WRAP"),
+		),
+		mcp.WithString("primaryAxisAlignItems",
+			mcp.Description("Main-axis alignment: MIN, CENTER, MAX, or SPACE_BETWEEN"),
+			mcp.Enum("MIN", "CENTER", "MAX", "SPACE_BETWEEN"),
+		),
+		mcp.WithString("counterAxisAlignItems",
+			mcp.Description("Cross-axis alignment: MIN, CENTER, MAX, or BASELINE"),
+			mcp.Enum("MIN", "CENTER", "MAX", "BASELINE"),
+		),
+		mcp.WithString("primaryAxisSizingMode",
+			mcp.Description("Primary axis sizing mode: FIXED or AUTO"),
+			mcp.Enum("FIXED", "AUTO"),
+		),
+		mcp.WithString("counterAxisSizingMode",
+			mcp.Description("Counter axis sizing mode: FIXED or AUTO"),
+			mcp.Enum("FIXED", "AUTO"),
+		),
+		mcp.WithString("layoutSizingHorizontal",
+			mcp.Description("Horizontal sizing in the Figma UI: FIXED, HUG, or FILL"),
+			mcp.Enum("FIXED", "HUG", "FILL"),
+		),
+		mcp.WithString("layoutSizingVertical",
+			mcp.Description("Vertical sizing in the Figma UI: FIXED, HUG, or FILL"),
+			mcp.Enum("FIXED", "HUG", "FILL"),
+		),
+		mcp.WithString("layoutAlign",
+			mcp.Description("Auto-layout child alignment: MIN, CENTER, MAX, STRETCH, or INHERIT"),
+			mcp.Enum("MIN", "CENTER", "MAX", "STRETCH", "INHERIT"),
+		),
+		mcp.WithNumber("layoutGrow",
+			mcp.Description("Auto-layout child grow factor: 0 or 1"),
+		),
+		mcp.WithString("layoutPositioning",
+			mcp.Description("Auto-layout child positioning: AUTO or ABSOLUTE"),
+			mcp.Enum("AUTO", "ABSOLUTE"),
+		),
+		mcp.WithNumber("paddingTop", mcp.Description("Top padding")),
+		mcp.WithNumber("paddingRight", mcp.Description("Right padding")),
+		mcp.WithNumber("paddingBottom", mcp.Description("Bottom padding")),
+		mcp.WithNumber("paddingLeft", mcp.Description("Left padding")),
+		mcp.WithNumber("itemSpacing", mcp.Description("Spacing between items")),
+		mcp.WithNumber("counterAxisSpacing", mcp.Description("Spacing between wrapped rows/columns")),
+		mcp.WithBoolean("clipsContent", mcp.Description("Whether overflowing children are clipped")),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		nodeID, _ := req.GetArguments()["nodeId"].(string)
+		params := map[string]interface{}{}
+		for _, key := range []string{
+			"layoutMode", "layoutWrap",
+			"primaryAxisAlignItems", "counterAxisAlignItems",
+			"primaryAxisSizingMode", "counterAxisSizingMode",
+			"layoutSizingHorizontal", "layoutSizingVertical",
+			"layoutAlign", "layoutPositioning",
+		} {
+			if v, ok := req.GetArguments()[key].(string); ok && v != "" {
+				params[key] = v
+			}
+		}
+		for _, key := range []string{
+			"layoutGrow",
+			"paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+			"itemSpacing", "counterAxisSpacing",
+		} {
+			if v, ok := req.GetArguments()[key].(float64); ok {
+				params[key] = v
+			}
+		}
+		if v, ok := req.GetArguments()["clipsContent"].(bool); ok {
+			params["clipsContent"] = v
+		}
+		resp, err := node.Send(ctx, "set_layout_properties", []string{nodeID}, params)
+		return renderResponse(resp, err)
+	})
+
+	s.AddTool(mcp.NewTool("set_text_style",
+		mcp.WithDescription("Update typography and text layout properties on a TEXT node."),
+		mcp.WithString("nodeId",
+			mcp.Required(),
+			mcp.Description("TEXT node ID in colon format e.g. '4029:12345'"),
+		),
+		mcp.WithString("fontFamily", mcp.Description("Font family e.g. Inter")),
+		mcp.WithString("fontStyle", mcp.Description("Font style e.g. Regular, Bold")),
+		mcp.WithNumber("fontSize", mcp.Description("Font size in pixels")),
+		mcp.WithString("textCase",
+			mcp.Description("Text case override"),
+			mcp.Enum("ORIGINAL", "UPPER", "LOWER", "TITLE", "SMALL_CAPS", "SMALL_CAPS_FORCED"),
+		),
+		mcp.WithString("textAlignHorizontal",
+			mcp.Description("Horizontal text alignment"),
+			mcp.Enum("LEFT", "CENTER", "RIGHT", "JUSTIFIED"),
+		),
+		mcp.WithString("textAlignVertical",
+			mcp.Description("Vertical text alignment"),
+			mcp.Enum("TOP", "CENTER", "BOTTOM"),
+		),
+		mcp.WithNumber("paragraphSpacing", mcp.Description("Paragraph spacing")),
+		mcp.WithObject("lineHeight",
+			mcp.Description("Line height object: {unit: AUTO} or {unit: PIXELS|PERCENT|FONT_SIZE_%, value: number}"),
+			mcp.Properties(map[string]interface{}{
+				"unit": map[string]interface{}{"type": "string"},
+				"value": map[string]interface{}{"type": "number"},
+			}),
+		),
+		mcp.WithObject("letterSpacing",
+			mcp.Description("Letter spacing object: {unit: PIXELS|PERCENT, value: number}"),
+			mcp.Properties(map[string]interface{}{
+				"unit": map[string]interface{}{"type": "string"},
+				"value": map[string]interface{}{"type": "number"},
+			}),
+		),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		nodeID, _ := req.GetArguments()["nodeId"].(string)
+		params := map[string]interface{}{}
+		for _, key := range []string{"fontFamily", "fontStyle", "textCase", "textAlignHorizontal", "textAlignVertical"} {
+			if v, ok := req.GetArguments()[key].(string); ok && v != "" {
+				params[key] = v
+			}
+		}
+		for _, key := range []string{"fontSize", "paragraphSpacing"} {
+			if v, ok := req.GetArguments()[key].(float64); ok {
+				params[key] = v
+			}
+		}
+		if v, ok := req.GetArguments()["lineHeight"].(map[string]interface{}); ok {
+			params["lineHeight"] = v
+		}
+		if v, ok := req.GetArguments()["letterSpacing"].(map[string]interface{}); ok {
+			params["letterSpacing"] = v
+		}
+		resp, err := node.Send(ctx, "set_text_style", []string{nodeID}, params)
+		return renderResponse(resp, err)
+	})
+
+	s.AddTool(mcp.NewTool("set_effects",
+		mcp.WithDescription("Replace a node's effects with shadows and/or blurs. Pass an empty array to clear all effects."),
+		mcp.WithString("nodeId",
+			mcp.Required(),
+			mcp.Description("Node ID in colon format e.g. '4029:12345'"),
+		),
+		mcp.WithArray("effects",
+			mcp.Required(),
+			mcp.Description("List of effect objects. Supported types: DROP_SHADOW, INNER_SHADOW, LAYER_BLUR, BACKGROUND_BLUR"),
+			mcp.Items(map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"type": map[string]interface{}{"type": "string"},
+					"color": map[string]interface{}{"type": "string"},
+					"x": map[string]interface{}{"type": "number"},
+					"y": map[string]interface{}{"type": "number"},
+					"radius": map[string]interface{}{"type": "number"},
+					"spread": map[string]interface{}{"type": "number"},
+					"blendMode": map[string]interface{}{"type": "string"},
+					"visible": map[string]interface{}{"type": "boolean"},
+					"showShadowBehindNode": map[string]interface{}{"type": "boolean"},
+				},
+			}),
+		),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		nodeID, _ := req.GetArguments()["nodeId"].(string)
+		params := map[string]interface{}{}
+		if raw, ok := req.GetArguments()["effects"].([]interface{}); ok {
+			params["effects"] = raw
+		}
+		resp, err := node.Send(ctx, "set_effects", []string{nodeID}, params)
+		return renderResponse(resp, err)
+	})
+
+	s.AddTool(mcp.NewTool("apply_styles",
+		mcp.WithDescription("Apply local fill, stroke, effect, and/or text styles to a node using style IDs."),
+		mcp.WithString("nodeId",
+			mcp.Required(),
+			mcp.Description("Node ID in colon format e.g. '4029:12345'"),
+		),
+		mcp.WithString("fillStyleId", mcp.Description("Local paint style ID to apply to fills")),
+		mcp.WithString("strokeStyleId", mcp.Description("Local paint style ID to apply to strokes")),
+		mcp.WithString("effectStyleId", mcp.Description("Local effect style ID to apply to effects")),
+		mcp.WithString("textStyleId", mcp.Description("Local text style ID to apply to a TEXT node")),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		nodeID, _ := req.GetArguments()["nodeId"].(string)
+		params := map[string]interface{}{}
+		for _, key := range []string{"fillStyleId", "strokeStyleId", "effectStyleId", "textStyleId"} {
+			if v, ok := req.GetArguments()[key].(string); ok && v != "" {
+				params[key] = v
+			}
+		}
+		resp, err := node.Send(ctx, "apply_styles", []string{nodeID}, params)
+		return renderResponse(resp, err)
+	})
+
+	s.AddTool(mcp.NewTool("create_instance",
+		mcp.WithDescription("Create an instance from a local component using componentId, componentKey, or name."),
+		mcp.WithString("componentId", mcp.Description("Local component node ID in colon format")),
+		mcp.WithString("componentKey", mcp.Description("Local component key")),
+		mcp.WithString("name", mcp.Description("Local component name fallback if componentId/componentKey are unknown")),
+		mcp.WithString("parentId", mcp.Description("Parent node ID in colon format. Defaults to current page.")),
+		mcp.WithNumber("x", mcp.Description("X position")),
+		mcp.WithNumber("y", mcp.Description("Y position")),
+		mcp.WithObject("componentProperties",
+			mcp.Description("Optional component properties to pass to instance.setProperties()"),
+			mcp.AdditionalProperties(map[string]interface{}{
+				"anyOf": []map[string]interface{}{
+					{"type": "string"},
+					{"type": "boolean"},
+				},
+			}),
+		),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		params := map[string]interface{}{}
+		for _, key := range []string{"componentId", "componentKey", "name", "parentId"} {
+			if v, ok := req.GetArguments()[key].(string); ok && v != "" {
+				params[key] = v
+			}
+		}
+		for _, key := range []string{"x", "y"} {
+			if v, ok := req.GetArguments()[key].(float64); ok {
+				params[key] = v
+			}
+		}
+		if v, ok := req.GetArguments()["componentProperties"].(map[string]interface{}); ok && len(v) > 0 {
+			params["componentProperties"] = v
+		}
+		resp, err := node.Send(ctx, "create_instance", nil, params)
+		return renderResponse(resp, err)
+	})
+
 	s.AddTool(mcp.NewTool("move_nodes",
 		mcp.WithDescription("Move one or more nodes to an absolute position on the canvas."),
 		mcp.WithArray("nodeIds",

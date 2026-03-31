@@ -215,6 +215,12 @@ và dùng bảng màu cream ấm cùng navy.
 
 ---
 
+## Advanced Tool Spec
+
+- Xem chi tiet 5 tool moi phuc vu generate UI hien dai tai [docs/advanced-write-tools-spec.md](docs/advanced-write-tools-spec.md)
+
+---
+
 ## Available Tools
 
 ### Write — Create
@@ -234,6 +240,11 @@ và dùng bảng màu cream ấm cùng navy.
 | `set_text` | Update text content of an existing TEXT node |
 | `set_fills` | Set solid fill color (hex) on a node |
 | `set_strokes` | Set solid stroke color and weight on a node |
+| `set_layout_properties` | Update auto-layout, sizing, spacing, and layout-child properties |
+| `set_text_style` | Update typography properties such as font, line height, spacing, and alignment |
+| `set_effects` | Replace node effects with shadows and/or blurs |
+| `apply_styles` | Apply local fill, stroke, effect, and text styles by style ID |
+| `create_instance` | Create an instance from a local component by ID, key, or name |
 | `move_nodes` | Move nodes to an absolute x/y position |
 | `resize_nodes` | Resize nodes by width and/or height |
 | `rename_node` | Rename a node |

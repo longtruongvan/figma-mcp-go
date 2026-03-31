@@ -3,7 +3,17 @@
 // Every mutation calls figma.commitUndo() so changes are undoable via Cmd/Ctrl+Z.
 
 import { getBounds } from "./serializers";
-import { makeSolidPaint, getParentNode, base64ToBytes } from "./write-helpers";
+import {
+  makeSolidPaint,
+  getParentNode,
+  base64ToBytes,
+  loadAllFonts,
+  parseLetterSpacing,
+  parseLineHeight,
+  makeEffect,
+  resolveComponentNode,
+  mapComponentProperties,
+} from "./write-helpers";
 
 export const handleWriteRequest = async (request: any) => {
   switch (request.type) {
@@ -143,6 +153,227 @@ export const handleWriteRequest = async (request: any) => {
         type: request.type,
         requestId: request.requestId,
         data: { id: node.id, name: node.name },
+      };
+    }
+
+    case "set_layout_properties": {
+      const p = request.params || {};
+      const nodeId = request.nodeIds && request.nodeIds[0];
+      if (!nodeId) throw new Error("nodeId is required");
+      const node = await figma.getNodeByIdAsync(nodeId) as any;
+      if (!node) throw new Error(`Node not found: ${nodeId}`);
+
+      const applied: any = {};
+      const setProp = (prop: string) => {
+        if (!(prop in p)) return;
+        if (!(prop in node)) throw new Error(`Node ${nodeId} does not support ${prop}`);
+        node[prop] = p[prop];
+        applied[prop] = p[prop];
+      };
+
+      [
+        "layoutMode",
+        "layoutWrap",
+        "primaryAxisAlignItems",
+        "counterAxisAlignItems",
+        "primaryAxisSizingMode",
+        "counterAxisSizingMode",
+        "layoutSizingHorizontal",
+        "layoutSizingVertical",
+        "layoutAlign",
+        "layoutGrow",
+        "layoutPositioning",
+        "paddingTop",
+        "paddingRight",
+        "paddingBottom",
+        "paddingLeft",
+        "itemSpacing",
+        "counterAxisSpacing",
+        "clipsContent",
+      ].forEach(setProp);
+
+      figma.commitUndo();
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: { id: node.id, name: node.name, applied },
+      };
+    }
+
+    case "set_text_style": {
+      const p = request.params || {};
+      const nodeId = request.nodeIds && request.nodeIds[0];
+      if (!nodeId) throw new Error("nodeId is required");
+      const node = await figma.getNodeByIdAsync(nodeId);
+      if (!node) throw new Error(`Node not found: ${nodeId}`);
+      if (node.type !== "TEXT") throw new Error(`Node ${nodeId} is not a TEXT node`);
+
+      await loadAllFonts(node);
+
+      const currentFonts = node.characters.length > 0
+        ? node.getRangeAllFontNames(0, node.characters.length)
+        : [];
+      const baseFont = typeof node.fontName !== "symbol"
+        ? node.fontName
+        : currentFonts[0] || { family: "Inter", style: "Regular" };
+
+      const applied: any = {};
+
+      if (p.fontFamily || p.fontStyle) {
+        const nextFont = {
+          family: p.fontFamily || baseFont.family,
+          style: p.fontStyle || baseFont.style,
+        };
+        await figma.loadFontAsync(nextFont);
+        node.fontName = nextFont;
+        applied.fontFamily = nextFont.family;
+        applied.fontStyle = nextFont.style;
+      }
+      if (p.fontSize != null) {
+        node.fontSize = p.fontSize;
+        applied.fontSize = p.fontSize;
+      }
+      if (p.textCase) {
+        node.textCase = p.textCase;
+        applied.textCase = p.textCase;
+      }
+      if (p.textAlignHorizontal) {
+        node.textAlignHorizontal = p.textAlignHorizontal;
+        applied.textAlignHorizontal = p.textAlignHorizontal;
+      }
+      if (p.textAlignVertical) {
+        node.textAlignVertical = p.textAlignVertical;
+        applied.textAlignVertical = p.textAlignVertical;
+      }
+      if (p.paragraphSpacing != null) {
+        node.paragraphSpacing = p.paragraphSpacing;
+        applied.paragraphSpacing = p.paragraphSpacing;
+      }
+
+      const lineHeight = parseLineHeight(p.lineHeight);
+      if (lineHeight) {
+        node.lineHeight = lineHeight;
+        applied.lineHeight = lineHeight;
+      }
+
+      const letterSpacing = parseLetterSpacing(p.letterSpacing);
+      if (letterSpacing) {
+        node.letterSpacing = letterSpacing;
+        applied.letterSpacing = letterSpacing;
+      }
+
+      figma.commitUndo();
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: { id: node.id, name: node.name, applied },
+      };
+    }
+
+    case "set_effects": {
+      const p = request.params || {};
+      const nodeId = request.nodeIds && request.nodeIds[0];
+      if (!nodeId) throw new Error("nodeId is required");
+      const node = await figma.getNodeByIdAsync(nodeId);
+      if (!node) throw new Error(`Node not found: ${nodeId}`);
+      if (!("effects" in node)) throw new Error(`Node ${nodeId} does not support effects`);
+
+      const effects = Array.isArray(p.effects) ? p.effects.map(makeEffect) : [];
+      (node as any).effects = effects;
+
+      figma.commitUndo();
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: {
+          id: node.id,
+          name: node.name,
+          effectCount: effects.length,
+          effectTypes: effects.map((effect: any) => effect.type),
+        },
+      };
+    }
+
+    case "apply_styles": {
+      const p = request.params || {};
+      const nodeId = request.nodeIds && request.nodeIds[0];
+      if (!nodeId) throw new Error("nodeId is required");
+      const node = await figma.getNodeByIdAsync(nodeId) as any;
+      if (!node) throw new Error(`Node not found: ${nodeId}`);
+
+      const applied: any = {};
+
+      if (p.fillStyleId) {
+        if (typeof node.setFillStyleIdAsync !== "function") {
+          throw new Error(`Node ${nodeId} does not support fill styles`);
+        }
+        await node.setFillStyleIdAsync(p.fillStyleId);
+        applied.fillStyleId = p.fillStyleId;
+      }
+      if (p.strokeStyleId) {
+        if (typeof node.setStrokeStyleIdAsync !== "function") {
+          throw new Error(`Node ${nodeId} does not support stroke styles`);
+        }
+        await node.setStrokeStyleIdAsync(p.strokeStyleId);
+        applied.strokeStyleId = p.strokeStyleId;
+      }
+      if (p.effectStyleId) {
+        if (typeof node.setEffectStyleIdAsync !== "function") {
+          throw new Error(`Node ${nodeId} does not support effect styles`);
+        }
+        await node.setEffectStyleIdAsync(p.effectStyleId);
+        applied.effectStyleId = p.effectStyleId;
+      }
+      if (p.textStyleId) {
+        if (node.type !== "TEXT") throw new Error(`Node ${nodeId} is not a TEXT node`);
+        await loadAllFonts(node);
+        await node.setTextStyleIdAsync(p.textStyleId);
+        applied.textStyleId = p.textStyleId;
+      }
+
+      figma.commitUndo();
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: { id: node.id, name: node.name, applied },
+      };
+    }
+
+    case "create_instance": {
+      const p = request.params || {};
+      const component = await resolveComponentNode({
+        componentId: p.componentId,
+        componentKey: p.componentKey,
+        name: p.name,
+      });
+      const parent = await getParentNode(p.parentId);
+      const instance = component.createInstance();
+
+      if (parent !== figma.currentPage || instance.parent !== parent) {
+        (parent as any).appendChild(instance);
+      }
+      if (p.x != null) instance.x = p.x;
+      if (p.y != null) instance.y = p.y;
+
+      if (p.componentProperties && typeof p.componentProperties === "object") {
+        const mapped = mapComponentProperties(instance, p.componentProperties);
+        if (Object.keys(mapped).length > 0) {
+          instance.setProperties(mapped);
+        }
+      }
+
+      figma.commitUndo();
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: {
+          id: instance.id,
+          name: instance.name,
+          type: instance.type,
+          mainComponentId: component.id,
+          componentPropertyCount: Object.keys(instance.componentProperties || {}).length,
+          bounds: getBounds(instance),
+        },
       };
     }
 
