@@ -7,6 +7,7 @@ import {
   makeSolidPaint,
   getParentNode,
   base64ToBytes,
+  applyTextBoxProperties,
   loadAllFonts,
   parseLetterSpacing,
   parseLineHeight,
@@ -90,6 +91,14 @@ export const handleWriteRequest = async (request: any) => {
       textNode.fontName = { family: fontFamily, style: fontStyle };
       if (p.fontSize) textNode.fontSize = p.fontSize;
       textNode.characters = p.text || "";
+      if (p.textAlignHorizontal) textNode.textAlignHorizontal = p.textAlignHorizontal;
+      if (p.textAlignVertical) textNode.textAlignVertical = p.textAlignVertical;
+      if (p.paragraphSpacing != null) textNode.paragraphSpacing = p.paragraphSpacing;
+      const lineHeight = parseLineHeight(p.lineHeight);
+      if (lineHeight) textNode.lineHeight = lineHeight;
+      const letterSpacing = parseLetterSpacing(p.letterSpacing);
+      if (letterSpacing) textNode.letterSpacing = letterSpacing;
+      applyTextBoxProperties(textNode, p);
       textNode.x = p.x != null ? p.x : 0;
       textNode.y = p.y != null ? p.y : 0;
       if (p.name) textNode.name = p.name;
@@ -110,10 +119,7 @@ export const handleWriteRequest = async (request: any) => {
       const node = await figma.getNodeByIdAsync(nodeId);
       if (!node) throw new Error(`Node not found: ${nodeId}`);
       if (node.type !== "TEXT") throw new Error(`Node ${nodeId} is not a TEXT node`);
-      const fontName = typeof node.fontName === "symbol"
-        ? { family: "Inter", style: "Regular" }
-        : node.fontName;
-      await figma.loadFontAsync(fontName);
+      await loadAllFonts(node);
       node.characters = p.text;
       figma.commitUndo();
       return {
@@ -262,6 +268,8 @@ export const handleWriteRequest = async (request: any) => {
         applied.letterSpacing = letterSpacing;
       }
 
+      applyTextBoxProperties(node, p, applied);
+
       figma.commitUndo();
       return {
         type: request.type,
@@ -402,6 +410,13 @@ export const handleWriteRequest = async (request: any) => {
       for (const nid of nodeIds) {
         const n = await figma.getNodeByIdAsync(nid) as any;
         if (!n) { results.push({ nodeId: nid, error: "Node not found" }); continue; }
+        if (n.type === "TEXT") {
+          results.push({
+            nodeId: nid,
+            error: "TEXT nodes are not supported by resize_nodes. Use set_text_style with width, height, and textAutoResize instead.",
+          });
+          continue;
+        }
         if (!("resize" in n)) { results.push({ nodeId: nid, error: "Node does not support resize" }); continue; }
         const w = p.width != null ? p.width : n.width;
         const h = p.height != null ? p.height : n.height;

@@ -90,6 +90,34 @@ export const parseLetterSpacing = (value: any): LetterSpacing | undefined => {
   return { unit: value.unit, value: value.value };
 };
 
+export const applyTextBoxProperties = (
+  node: TextNode,
+  value: { textAutoResize?: TextAutoResize; width?: number; height?: number },
+  applied?: Record<string, any>,
+) => {
+  const hasWidth = value.width != null;
+  const hasHeight = value.height != null;
+
+  let nextMode = value.textAutoResize;
+  if (!nextMode && (hasWidth || hasHeight)) {
+    nextMode = hasWidth && !hasHeight ? "HEIGHT" : "NONE";
+  }
+
+  if (nextMode) {
+    node.textAutoResize = nextMode;
+    if (applied) applied.textAutoResize = nextMode;
+  }
+
+  if (!hasWidth && !hasHeight) return;
+
+  const nextWidth = hasWidth ? value.width! : node.width;
+  const nextHeight = hasHeight ? value.height! : node.height;
+  node.resize(nextWidth, nextHeight);
+
+  if (applied && hasWidth) applied.width = nextWidth;
+  if (applied && hasHeight) applied.height = nextHeight;
+};
+
 export const makeEffect = (effect: any): Effect => {
   switch (effect.type) {
     case "DROP_SHADOW":

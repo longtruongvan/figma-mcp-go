@@ -157,6 +157,41 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		if text, _ := params["text"].(string); text == "" {
 			return "text is required"
 		}
+		if v, ok := params["fontSize"].(float64); ok && v <= 0 {
+			return "fontSize must be positive"
+		}
+		if v, ok := params["width"].(float64); ok && v <= 0 {
+			return "width must be positive"
+		}
+		if v, ok := params["height"].(float64); ok && v <= 0 {
+			return "height must be positive"
+		}
+		if err := validateTextAutoResize(params["textAutoResize"]); err != "" {
+			return err
+		}
+		if v, ok := params["textAlignHorizontal"].(string); ok && v != "" {
+			switch v {
+			case "LEFT", "CENTER", "RIGHT", "JUSTIFIED":
+			default:
+				return fmt.Sprintf("textAlignHorizontal must be LEFT, CENTER, RIGHT, or JUSTIFIED, got: %s", v)
+			}
+		}
+		if v, ok := params["textAlignVertical"].(string); ok && v != "" {
+			switch v {
+			case "TOP", "CENTER", "BOTTOM":
+			default:
+				return fmt.Sprintf("textAlignVertical must be TOP, CENTER, or BOTTOM, got: %s", v)
+			}
+		}
+		if v, ok := params["paragraphSpacing"].(float64); ok && v < 0 {
+			return "paragraphSpacing must be non-negative"
+		}
+		if err := validateLineHeight(params["lineHeight"]); err != "" {
+			return err
+		}
+		if err := validateLetterSpacing(params["letterSpacing"]); err != "" {
+			return err
+		}
 		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
 			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
 		}
@@ -372,7 +407,8 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		}
 		if !hasAnyParam(params,
 			"fontFamily", "fontStyle", "fontSize",
-			"textCase", "textAlignHorizontal", "textAlignVertical",
+			"textCase", "textAlignHorizontal", "textAlignVertical", "textAutoResize",
+			"width", "height",
 			"paragraphSpacing", "lineHeight", "letterSpacing",
 		) {
 			return "at least one text style property is required"
@@ -382,6 +418,15 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		}
 		if v, ok := params["paragraphSpacing"].(float64); ok && v < 0 {
 			return "paragraphSpacing must be non-negative"
+		}
+		if v, ok := params["width"].(float64); ok && v <= 0 {
+			return "width must be positive"
+		}
+		if v, ok := params["height"].(float64); ok && v <= 0 {
+			return "height must be positive"
+		}
+		if err := validateTextAutoResize(params["textAutoResize"]); err != "" {
+			return err
 		}
 		if v, ok := params["textCase"].(string); ok && v != "" {
 			switch v {
@@ -548,5 +593,21 @@ func validateLetterSpacing(raw interface{}) string {
 		return ""
 	default:
 		return fmt.Sprintf("letterSpacing.unit is invalid: %s", unit)
+	}
+}
+
+func validateTextAutoResize(raw interface{}) string {
+	if raw == nil {
+		return ""
+	}
+	value, ok := raw.(string)
+	if !ok {
+		return "textAutoResize must be a string"
+	}
+	switch value {
+	case "NONE", "WIDTH_AND_HEIGHT", "HEIGHT", "TRUNCATE":
+		return ""
+	default:
+		return fmt.Sprintf("textAutoResize must be NONE, WIDTH_AND_HEIGHT, HEIGHT, or TRUNCATE, got: %s", value)
 	}
 }

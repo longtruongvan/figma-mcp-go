@@ -63,7 +63,7 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 	})
 
 	s.AddTool(mcp.NewTool("create_text",
-		mcp.WithDescription("Create a new text node on the current page or inside a parent node."),
+		mcp.WithDescription("Create a new text node on the current page or inside a parent node, with optional typography and text-box sizing controls."),
 		mcp.WithString("text",
 			mcp.Required(),
 			mcp.Description("Text content"),
@@ -73,11 +73,61 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 		mcp.WithNumber("fontSize", mcp.Description("Font size in pixels (default 14)")),
 		mcp.WithString("fontFamily", mcp.Description("Font family e.g. Inter (default Inter)")),
 		mcp.WithString("fontStyle", mcp.Description("Font style e.g. Regular, Bold (default Regular)")),
+		mcp.WithString("textAutoResize",
+			mcp.Description("Text box sizing mode: NONE, WIDTH_AND_HEIGHT, HEIGHT, or TRUNCATE"),
+			mcp.Enum("NONE", "WIDTH_AND_HEIGHT", "HEIGHT", "TRUNCATE"),
+		),
+		mcp.WithNumber("width", mcp.Description("Text box width in pixels. If provided alone, the node defaults to HEIGHT auto-resize for wrapping.")),
+		mcp.WithNumber("height", mcp.Description("Text box height in pixels. If provided, the node defaults to NONE auto-resize unless textAutoResize is explicitly set.")),
+		mcp.WithString("textAlignHorizontal",
+			mcp.Description("Horizontal text alignment"),
+			mcp.Enum("LEFT", "CENTER", "RIGHT", "JUSTIFIED"),
+		),
+		mcp.WithString("textAlignVertical",
+			mcp.Description("Vertical text alignment"),
+			mcp.Enum("TOP", "CENTER", "BOTTOM"),
+		),
+		mcp.WithNumber("paragraphSpacing", mcp.Description("Paragraph spacing")),
+		mcp.WithObject("lineHeight",
+			mcp.Description("Line height object: {unit: AUTO} or {unit: PIXELS|PERCENT|FONT_SIZE_%, value: number}"),
+			mcp.Properties(map[string]interface{}{
+				"unit": map[string]interface{}{"type": "string"},
+				"value": map[string]interface{}{"type": "number"},
+			}),
+		),
+		mcp.WithObject("letterSpacing",
+			mcp.Description("Letter spacing object: {unit: PIXELS|PERCENT, value: number}"),
+			mcp.Properties(map[string]interface{}{
+				"unit": map[string]interface{}{"type": "string"},
+				"value": map[string]interface{}{"type": "number"},
+			}),
+		),
 		mcp.WithString("fillColor", mcp.Description("Text color as hex e.g. #000000")),
 		mcp.WithString("name", mcp.Description("Node name")),
 		mcp.WithString("parentId", mcp.Description("Parent node ID in colon format. Defaults to current page.")),
 	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		params := req.GetArguments()
+		params := map[string]interface{}{
+			"text": req.GetArguments()["text"],
+		}
+		for _, key := range []string{
+			"fontFamily", "fontStyle", "fillColor", "name", "parentId",
+			"textAutoResize", "textAlignHorizontal", "textAlignVertical",
+		} {
+			if v, ok := req.GetArguments()[key].(string); ok && v != "" {
+				params[key] = v
+			}
+		}
+		for _, key := range []string{"x", "y", "fontSize", "width", "height", "paragraphSpacing"} {
+			if v, ok := req.GetArguments()[key].(float64); ok {
+				params[key] = v
+			}
+		}
+		if v, ok := req.GetArguments()["lineHeight"].(map[string]interface{}); ok {
+			params["lineHeight"] = v
+		}
+		if v, ok := req.GetArguments()["letterSpacing"].(map[string]interface{}); ok {
+			params["letterSpacing"] = v
+		}
 		resp, err := node.Send(ctx, "create_text", nil, params)
 		return renderResponse(resp, err)
 	})
@@ -276,7 +326,7 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 	})
 
 	s.AddTool(mcp.NewTool("set_text_style",
-		mcp.WithDescription("Update typography and text layout properties on a TEXT node."),
+		mcp.WithDescription("Update typography and text-box properties on a TEXT node."),
 		mcp.WithString("nodeId",
 			mcp.Required(),
 			mcp.Description("TEXT node ID in colon format e.g. '4029:12345'"),
@@ -296,6 +346,12 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 			mcp.Description("Vertical text alignment"),
 			mcp.Enum("TOP", "CENTER", "BOTTOM"),
 		),
+		mcp.WithString("textAutoResize",
+			mcp.Description("Text box sizing mode: NONE, WIDTH_AND_HEIGHT, HEIGHT, or TRUNCATE"),
+			mcp.Enum("NONE", "WIDTH_AND_HEIGHT", "HEIGHT", "TRUNCATE"),
+		),
+		mcp.WithNumber("width", mcp.Description("Text box width in pixels")),
+		mcp.WithNumber("height", mcp.Description("Text box height in pixels")),
 		mcp.WithNumber("paragraphSpacing", mcp.Description("Paragraph spacing")),
 		mcp.WithObject("lineHeight",
 			mcp.Description("Line height object: {unit: AUTO} or {unit: PIXELS|PERCENT|FONT_SIZE_%, value: number}"),
@@ -314,12 +370,12 @@ func registerWriteTools(s *server.MCPServer, node *Node) {
 	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		nodeID, _ := req.GetArguments()["nodeId"].(string)
 		params := map[string]interface{}{}
-		for _, key := range []string{"fontFamily", "fontStyle", "textCase", "textAlignHorizontal", "textAlignVertical"} {
+		for _, key := range []string{"fontFamily", "fontStyle", "textCase", "textAlignHorizontal", "textAlignVertical", "textAutoResize"} {
 			if v, ok := req.GetArguments()[key].(string); ok && v != "" {
 				params[key] = v
 			}
 		}
-		for _, key := range []string{"fontSize", "paragraphSpacing"} {
+		for _, key := range []string{"fontSize", "width", "height", "paragraphSpacing"} {
 			if v, ok := req.GetArguments()[key].(float64); ok {
 				params[key] = v
 			}

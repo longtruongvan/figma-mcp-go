@@ -717,6 +717,24 @@ var __async = (__this, __arguments, generator) => {
     if (!value.unit || value.value == null) return void 0;
     return { unit: value.unit, value: value.value };
   };
+  const applyTextBoxProperties = (node, value, applied) => {
+    const hasWidth = value.width != null;
+    const hasHeight = value.height != null;
+    let nextMode = value.textAutoResize;
+    if (!nextMode && (hasWidth || hasHeight)) {
+      nextMode = hasWidth && !hasHeight ? "HEIGHT" : "NONE";
+    }
+    if (nextMode) {
+      node.textAutoResize = nextMode;
+      if (applied) applied.textAutoResize = nextMode;
+    }
+    if (!hasWidth && !hasHeight) return;
+    const nextWidth = hasWidth ? value.width : node.width;
+    const nextHeight = hasHeight ? value.height : node.height;
+    node.resize(nextWidth, nextHeight);
+    if (applied && hasWidth) applied.width = nextWidth;
+    if (applied && hasHeight) applied.height = nextHeight;
+  };
   const makeEffect = (effect) => {
     switch (effect.type) {
       case "DROP_SHADOW":
@@ -883,6 +901,14 @@ var __async = (__this, __arguments, generator) => {
         textNode.fontName = { family: fontFamily, style: fontStyle };
         if (p.fontSize) textNode.fontSize = p.fontSize;
         textNode.characters = p.text || "";
+        if (p.textAlignHorizontal) textNode.textAlignHorizontal = p.textAlignHorizontal;
+        if (p.textAlignVertical) textNode.textAlignVertical = p.textAlignVertical;
+        if (p.paragraphSpacing != null) textNode.paragraphSpacing = p.paragraphSpacing;
+        const lineHeight = parseLineHeight(p.lineHeight);
+        if (lineHeight) textNode.lineHeight = lineHeight;
+        const letterSpacing = parseLetterSpacing(p.letterSpacing);
+        if (letterSpacing) textNode.letterSpacing = letterSpacing;
+        applyTextBoxProperties(textNode, p);
         textNode.x = p.x != null ? p.x : 0;
         textNode.y = p.y != null ? p.y : 0;
         if (p.name) textNode.name = p.name;
@@ -902,8 +928,7 @@ var __async = (__this, __arguments, generator) => {
         const node = yield figma.getNodeByIdAsync(nodeId);
         if (!node) throw new Error(`Node not found: ${nodeId}`);
         if (node.type !== "TEXT") throw new Error(`Node ${nodeId} is not a TEXT node`);
-        const fontName = typeof node.fontName === "symbol" ? { family: "Inter", style: "Regular" } : node.fontName;
-        yield figma.loadFontAsync(fontName);
+        yield loadAllFonts(node);
         node.characters = p.text;
         figma.commitUndo();
         return {
@@ -1034,6 +1059,7 @@ var __async = (__this, __arguments, generator) => {
           node.letterSpacing = letterSpacing;
           applied.letterSpacing = letterSpacing;
         }
+        applyTextBoxProperties(node, p, applied);
         figma.commitUndo();
         return {
           type: request.type,
@@ -1168,6 +1194,13 @@ var __async = (__this, __arguments, generator) => {
           const n = yield figma.getNodeByIdAsync(nid);
           if (!n) {
             results.push({ nodeId: nid, error: "Node not found" });
+            continue;
+          }
+          if (n.type === "TEXT") {
+            results.push({
+              nodeId: nid,
+              error: "TEXT nodes are not supported by resize_nodes. Use set_text_style with width, height, and textAutoResize instead."
+            });
             continue;
           }
           if (!("resize" in n)) {

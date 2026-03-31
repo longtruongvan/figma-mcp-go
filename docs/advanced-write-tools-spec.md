@@ -55,6 +55,9 @@ Input:
 - `fontFamily?`
 - `fontStyle?`
 - `fontSize?`
+- `textAutoResize?`: `NONE` | `WIDTH_AND_HEIGHT` | `HEIGHT` | `TRUNCATE`
+- `width?`
+- `height?`
 - `textCase?`: `ORIGINAL` | `UPPER` | `LOWER` | `TITLE` | `SMALL_CAPS` | `SMALL_CAPS_FORCED`
 - `textAlignHorizontal?`: `LEFT` | `CENTER` | `RIGHT` | `JUSTIFIED`
 - `textAlignVertical?`: `TOP` | `CENTER` | `BOTTOM`
@@ -69,6 +72,8 @@ Output:
 Ghi chu:
 - Tool phai load font truoc khi ghi style.
 - Neu text node co mixed fonts, tool van phai co gang load tat ca font dang duoc dung.
+- Khi can text wrapping on dinh, truyen `width` va de tool dat `textAutoResize = HEIGHT`.
+- Khi can fixed text box, truyen ca `width` va `height` hoac set `textAutoResize = NONE`.
 
 ## 3. `set_effects`
 
