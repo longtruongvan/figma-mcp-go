@@ -82,6 +82,7 @@ go build -o bin/figma-mcp-go ./cmd/figma-mcp-go
 Repo có sẵn script [`dev-refresh.sh`](dev-refresh.sh) để build lại Go server và plugin chỉ với một lệnh:
 
 ```bash
+chmod +x dev-refresh.sh
 ./dev-refresh.sh
 ```
 
