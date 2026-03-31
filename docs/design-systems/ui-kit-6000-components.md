@@ -143,6 +143,17 @@
   - dung `bold` cho status success/error/warning neu can nhan manh
   - giu cung mot family trong cung mot man
 
+### Practical Defaults
+
+- default icon style:
+  - `vuesax/linear`
+- when to use `broken`:
+  - khi muon decorative accent hoac can chat minh hoa / ca tinh hon
+  - khong dung lam default cho toan bo man
+- when to use `bold`:
+  - cho status icon, semantic emphasis, hoac diem nhan nho trong form / feedback
+  - khong dung `bold` lam family icon chinh cho ca man neu khong co ly do ro rang
+
 ## Components
 
 ### Buttons
