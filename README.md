@@ -311,6 +311,46 @@ Chi tiết thiết kế:
 Hãy tạo màn hình đủ polished để dùng làm product concept, không chỉ là mockup cơ bản.
 ```
 
+**Nếu muốn generate theo design system đã snapshot**
+
+Khi bạn đã có profile design system trong repo, có thể gọi thẳng như sau:
+
+```text
+Dùng figma-mcp-go để tạo một màn hình mới trong Figma.
+
+Dùng design system ui-kit-6000-components.
+
+Loại màn: [mobile / desktop / landing page / dashboard]
+Kích thước: [vd 390x844 hoặc 1440x1024]
+Tên frame: [tên màn]
+
+Mục tiêu:
+- Tạo UI bám sát visual language của design system ui-kit-6000-components
+- Ưu tiên dùng đúng typography, palette, icon style, component pattern của profile này
+
+Yêu cầu:
+- Dùng heading display theo tinh thần của profile khi phù hợp
+- Ưu tiên Gotham cho heading/body, Anton cho display headline nếu hợp ngữ cảnh
+- Dùng palette purple / green / gray làm nền tảng
+- Ưu tiên icon family vuesax/linear
+- Nếu có thể, hãy bám theo pattern của Buttons, Inputs, Cards, Navigation Bars, Hero trong profile
+- Không tự động đổi sang style khác nếu tôi không yêu cầu
+
+Bối cảnh:
+- [mô tả màn hình]
+
+Bố cục:
+- [mô tả section]
+
+Nội dung:
+- [title / subtitle / CTA / item text]
+
+Điều cần tránh:
+- Không generic
+- Không lệch khỏi visual language của ui-kit-6000-components
+- Không trộn icon family khác
+```
+
 **Nếu muốn nhờ ChatGPT viết hộ prompt hoàn chỉnh**
 
 Bạn có thể ném đúng khuôn ở trên vào ChatGPT, hoặc dùng prompt meta này:
@@ -430,7 +470,7 @@ Phong cách:
 
 ## Advanced Tool Spec
 
-- Xem chi tiet 5 tool moi phuc vu generate UI hien dai tai [docs/advanced-write-tools-spec.md](docs/advanced-write-tools-spec.md)
+- Xem chi tiet bo advanced write tools va enhancement cho fill/corner radius tai [docs/advanced-write-tools-spec.md](docs/advanced-write-tools-spec.md)
 
 ---
 
@@ -451,8 +491,9 @@ Phong cách:
 | Tool | Description |
 |------|-------------|
 | `set_text` | Update text content of an existing TEXT node |
-| `set_fills` | Set solid fill color (hex) on a node |
+| `set_fills` | Set solid fills or gradient fills, or clear fills with `fills: []` |
 | `set_strokes` | Set solid stroke color and weight on a node |
+| `set_corner_radius` | Update uniform or per-corner radius on nodes that support rounded corners |
 | `set_layout_properties` | Update auto-layout, sizing, spacing, and layout-child properties |
 | `set_text_style` | Update typography plus TEXT sizing controls such as width, height, and textAutoResize |
 | `set_effects` | Replace node effects with shadows and/or blurs |
