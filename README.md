@@ -153,8 +153,8 @@ Sau đó:
 3. Chạy plugin trong bất kỳ file Figma nào
 
 Manifest local sẽ trỏ tới:
-- `plugin/dist/code.js`
-- `plugin/dist/index.html`
+- `plugin/code.js`
+- `plugin/index.html`
 
 ### 3. Mở AI client và kiểm tra kết nối
 

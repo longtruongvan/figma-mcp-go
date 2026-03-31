@@ -8,12 +8,12 @@ export default defineConfig({
   build: {
     target: "es2015",
     cssCodeSplit: false,
-    outDir: "../../dist",
+    outDir: "../..",
     rollupOptions: {
       output: {
         inlineDynamicImports: true,
       },
     },
-    emptyOutDir: true,
+    emptyOutDir: false,
   },
 });
